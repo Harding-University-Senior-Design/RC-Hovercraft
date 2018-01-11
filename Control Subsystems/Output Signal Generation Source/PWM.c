@@ -7,11 +7,17 @@
 
 #include "mcc_generated_files/mcc.h"
 
-#define __PIC24FJ128GA202__
+//FCY and TCY are based off _XTAL_FREQ, the current system clock
+//(see system_configuration.h)
+#define FCY (_XTAL_FREQ / 2)
+#define TCY ((double)1.0 / FCY)
+
 #include <xc.h>
 #include "PWM.h"
 
-void PWM_Left_Motor_Initialization(PWM_Module* left_motor)
+#define PWM_ROUNDING_OFFSET 0.5
+
+void PWM_LeftMotorInitialize(PWM_Module* left_motor)
 {
     //disables the left motor's OC while the pwm is set up
     Left_Motor_OC_CON1 = 0x0000;
@@ -38,7 +44,7 @@ void PWM_Left_Motor_Initialization(PWM_Module* left_motor)
     Left_Motor_OC_CON1bits.OCM = 0b110;
 }
 
-void PWM_Right_Motor_Initialization(PWM_Module* right_motor)
+void PWM_RightMotorInitialize(PWM_Module* right_motor)
 {
     //disables the left motor's OC while the pwm is set up
     Right_Motor_OC_CON1 = 0x0000;
@@ -65,77 +71,57 @@ void PWM_Right_Motor_Initialization(PWM_Module* right_motor)
     Right_Motor_OC_CON1bits.OCM = 0b110;
 }
 
-double PWM_Get_Left_Motor_Duty_Cycle(void)
+double PWM_GetLeftMotorDutyCycle(void)
 {
     return (double)Left_Motor_OCR / Right_Motor_OCRS;
 }
 
-double PWM_Get_Right_Motor_Duty_Cycle(void)
+double PWM_GetRightMotorDutyCycle(void)
 {
     return (double)Right_Motor_OCR / Right_Motor_OCRS;
 }
 
-double PWM_Get_Left_Motor_Frequency(void)
+double PWM_GetLeftMotorFrequency(void)
 {
-    //TODO: find an actual internal value to use instead of this hard coded one
-    const unsigned long CLOCK_FREQUENCY = 32000000;
-    const unsigned long FCY = 2 * CLOCK_FREQUENCY;
-    const double TCY = 1 / FCY;
-    
     double frequency;
-    double period;
     
-    period = (Left_Motor_OCRS + 1) * TCY;
-    frequency = 1 / period;
+    frequency = 1 / ((Left_Motor_OCRS + 1) * TCY);
     
     return frequency;
 }
 
-double PWM_Get_Right_Motor_Frequency(void)
-{
-    //TODO: find an actual internal value to use instead of this hard coded one
-    const unsigned long CLOCK_FREQUENCY = 32000000;
-    const unsigned long FCY = 2 * CLOCK_FREQUENCY;
-    const double TCY = 1 / FCY;
-    
+double PWM_GetRightMotorFrequency(void)
+{    
     double frequency;
-    double period;
     
-    period = (Right_Motor_OCRS + 1) * TCY;
-    frequency = 1 / period;
+    frequency = 1 / ((Right_Motor_OCRS + 1) * TCY);
     
     return frequency;
 }
 
-void PWM_Update_Left_Motor_Duty_Cycle(const PWM_Module* left_motor)
+void PWM_UpdateLeftMotorDutyCycle(const PWM_Module* left_motor)
 {
-    int logicHighClockCycles = (double)left_motor->duty_cycle_percentage * Left_Motor_OCRS / 100;
+    int logicHighClockCycles = (left_motor->duty_cycle_percentage * Left_Motor_OCRS / 100) + PWM_ROUNDING_OFFSET;
     Left_Motor_OCR = logicHighClockCycles;
 }
 
-void PWM_Update_Right_Motor_Duty_Cycle(const PWM_Module* right_motor)
+void PWM_UpdateRightMotorDutyCycle(const PWM_Module* right_motor)
 {
-    int logicHighClockCycles = (double)right_motor->duty_cycle_percentage * Right_Motor_OCRS / 100;
+    int logicHighClockCycles = (right_motor->duty_cycle_percentage * Right_Motor_OCRS / 100) + PWM_ROUNDING_OFFSET;
     Right_Motor_OCR = logicHighClockCycles;
 }
 
-void PWM_Update_Left_Motor_Frequency(const PWM_Module* left_motor)
-{
-    const unsigned long FCY = _XTAL_FREQ / 2;
-    const double TCY = 1.0 / FCY;
-    
-    double totalClockCycles = 1.0 / (left_motor->frequency * TCY) - 1;
+void PWM_UpdateLeftMotorFrequency(const PWM_Module* left_motor)
+{    
+    double totalClockCycles = (double)1.0 / (left_motor->frequency * TCY) - 1;
     Left_Motor_OCRS = (int)totalClockCycles;
     
     left_motor->UpdateDutyCycle(left_motor);
 }
 
-void PWM_Update_Right_Motor_Frequency(const PWM_Module* right_motor)
-{
-    const unsigned long FCY = _XTAL_FREQ / 2;
-    const double TCY = 1.0 / FCY;
-    
-    double totalClockCycles = 1.0 / (right_motor->frequency * TCY) - 1;
+void PWM_UpdateRightMotorFrequency(const PWM_Module* right_motor)
+{    
+    double totalClockCycles = (double)1.0 / (right_motor->frequency * TCY) - 1;
     Right_Motor_OCRS = (int)totalClockCycles;
     
     right_motor->UpdateDutyCycle(right_motor);

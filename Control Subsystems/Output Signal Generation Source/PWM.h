@@ -84,24 +84,24 @@ struct PWM_Module
 #define Right_Motor_OCRS OC2RS
 
 //Initializes the left motor's PWM signal using the OC1 module and the RP0 pin
-void PWM_Left_Motor_Initialization(PWM_Module* left_motor);
+void PWM_LeftMotorInitialize(PWM_Module* left_motor);
 //Initializes the left motor's PWM signal using the OC2 module and the RP1 pin
-void PWM_Right_Motor_Initialization(PWM_Module* right_motor);
+void PWM_RightMotorInitialize(PWM_Module* right_motor);
 
 //returns OCR / OCRS for the motor's PWM module, representing the duty cycle %
-double PWM_Get_Left_Motor_Duty_Cycle(void);
-double PWM_Get_Right_Motor_Duty_Cycle(void);
+double PWM_GetLeftMotorDutyCycle(void);
+double PWM_GetRightMotorDutyCycle(void);
 
 //calculates the frequency using OCRS and Tcy with the equation in Example 15-1
-double PWM_Get_Left_Motor_Frequency(void);
-double PWM_Get_Right_Motor_Frequency(void);
+double PWM_GetLeftMotorFrequency(void);
+double PWM_GetRightMotorFrequency(void);
 
 //sets the proper OCR register based on the duty_cycle_percentage variable
 //within the PWM_Module struct
-void PWM_Update_Left_Motor_Duty_Cycle(const PWM_Module* left_motor);
-void PWM_Update_Right_Motor_Duty_Cycle(const PWM_Module* right_motor);
+void PWM_UpdateLeftMotorDutyCycle(const PWM_Module* left_motor);
+void PWM_UpdateRightMotorDutyCycle(const PWM_Module* right_motor);
 
 //alters the proper OCR and OCRS registers based on the frequency variable
 //within the PWM_Module struct (in Hz)
-void PWM_Update_Left_Motor_Frequency(const PWM_Module* left_motor);
-void PWM_Update_Right_Motor_Frequency(const PWM_Module* right_motor);
+void PWM_UpdateLeftMotorFrequency(const PWM_Module* left_motor);
+void PWM_UpdateRightMotorFrequency(const PWM_Module* right_motor);
