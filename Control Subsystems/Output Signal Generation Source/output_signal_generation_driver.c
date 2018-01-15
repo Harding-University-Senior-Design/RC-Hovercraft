@@ -61,16 +61,22 @@ int main(void)
     Left_Motor.frequency = 20000;
     Left_Motor.UpdateFrequency(&Left_Motor);
     
+    Right_Motor.frequency = 20000;
+    Right_Motor.UpdateFrequency(&Right_Motor);
+    
     while(true)
     {
         int i;
-        for (i = 0; i < 100; i += 10)
+        for (i = 0; i <= 100; i += 10)
         {
             Left_Motor.duty_cycle_percentage = i;
             Left_Motor.UpdateDutyCycle(&Left_Motor);
+            
+            Right_Motor.duty_cycle_percentage = i;
+            Right_Motor.UpdateDutyCycle(&Right_Motor);
             __delay_ms(5000);
         }
     }
     
-    return 0;
+    return -1;
 }

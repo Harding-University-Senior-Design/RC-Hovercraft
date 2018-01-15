@@ -69,7 +69,7 @@ struct PWM_Module
 #define Left_Motor_OC_CON1bits OC1CON1bits
 #define Left_Motor_OC_CON2 OC1CON2
 #define Left_Motor_OC_CON2bits OC1CON2bits
-#define Left_Motor_RP RPOR0
+#define Left_Motor_RP RPOR0bits.RP0R
 #define Left_Motor_Remappable_Pin_Reference 13
 #define Left_Motor_OCR OC1R
 #define Left_Motor_OCRS OC1RS
@@ -78,7 +78,7 @@ struct PWM_Module
 #define Right_Motor_OC_CON1bits OC2CON1bits
 #define Right_Motor_OC_CON2 OC2CON2
 #define Right_Motor_OC_CON2bits OC2CON2bits
-#define Right_Motor_RP RPOR1
+#define Right_Motor_RP RPOR0bits.RP1R
 #define Right_Motor_Remappable_Pin_Reference 14
 #define Right_Motor_OCR OC2R
 #define Right_Motor_OCRS OC2RS

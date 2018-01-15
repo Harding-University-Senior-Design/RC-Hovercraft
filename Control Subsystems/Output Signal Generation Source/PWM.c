@@ -73,7 +73,7 @@ void PWM_RightMotorInitialize(PWM_Module* right_motor)
 
 double PWM_GetLeftMotorDutyCycle(void)
 {
-    return (double)Left_Motor_OCR / Right_Motor_OCRS;
+    return (double)Left_Motor_OCR / Left_Motor_OCRS;
 }
 
 double PWM_GetRightMotorDutyCycle(void)
@@ -85,7 +85,7 @@ double PWM_GetLeftMotorFrequency(void)
 {
     double frequency;
     
-    frequency = 1 / ((Left_Motor_OCRS + 1) * TCY);
+    frequency = (double)1.0 / ((Left_Motor_OCRS + 1) * TCY);
     
     return frequency;
 }
@@ -94,7 +94,7 @@ double PWM_GetRightMotorFrequency(void)
 {    
     double frequency;
     
-    frequency = 1 / ((Right_Motor_OCRS + 1) * TCY);
+    frequency = (double)1.0 / ((Right_Motor_OCRS + 1) * TCY);
     
     return frequency;
 }
