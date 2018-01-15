@@ -3,7 +3,7 @@
 //Not necessary if using MPLAB X IDE because the proper PIC is
 //recognized automatically.  It is only included as a failsafe.
 #define __PIC24FJ128GA202__
-#define FCY 16000000UL
+#define FCY (_XTAL_FREQ / 2)
 
 #include <xc.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@ void PIC_Initialization(void)
 }
 
 //uses OC1's PWM functionality and the RB0 pin
-void Example_PWM_Initialization(void)
+void Example_PWM_Initialize(void)
 {
     //disables OC1 while the pwm is set up
     OC1CON1 = 0x0000;
@@ -49,7 +49,7 @@ void Example_PWM_Initialization(void)
     OC1CON2 = 0x001F;
     OC1CON2bits.OCTRIG = 0;
     
-    //sets the pwm timer to the peripheral clock (Fcy)
+    //sets the pwm timer to the system clock (Fcy)
     //(bits set to 111)
     OC1CON1bits.OCTSEL = 0b111;
     
@@ -59,7 +59,7 @@ void Example_PWM_Initialization(void)
 
 int main(void)
 {
-	Example_PWM_Initialization();
+	Example_PWM_Initialize();
 	
 	//gradually alternates the PWM from a low to high duty cycle,
 	//then back to a low duty cycle
