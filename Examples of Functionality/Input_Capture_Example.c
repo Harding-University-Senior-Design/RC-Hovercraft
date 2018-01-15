@@ -5,7 +5,7 @@
 #define FCY (_XTAL_FREQ / 2)
 
 #include <stdlib.h>
-#include <stdbool.h>
+#include <stdio.h>
 #include <libpic30.h>
 #include <xc.h>
 
@@ -20,24 +20,34 @@ double frequencyOfInputSignal = 0;
 //it is assumed that the input signal will be a 3.3V square wave (PWM)
 void __attribute__ ((__interrupt__, auto_psv)) _IC1Interrupt(void)
 {
-    static bool sufficientDataCollected = true;
+    static bool sufficientDataCollected = false;
     static int priorRisingTime = 0;
     static int risingTime = 0;
     static int fallingTime = 0;
     
-    IFS0bits.IC1IF = 0;
-    
+    //This example will create a pseudo-PWM with the same duty cycle
+    //and frequency of the input signal to port B5
     if (IC1CON1bits.ICM == RISING_EDGE_TRIGGER_SETTING)
     {
         //the rising edge is how the frequency/period of the signal will be
         //measured, so the prior one must be captured for comparison
         priorRisingTime = risingTime;
         risingTime = IC1BUF;
+        
+        LATBbits.LATB5 = 1;
+        
+        IC1CON1bits.ICM = FALLING_EDGE_TRIGGER_SETTING;
     }
     else if (IC1CON1bits.ICM == FALLING_EDGE_TRIGGER_SETTING)
     {
         fallingTime = IC1BUF;
+        
+        LATBbits.LATB5 = 0;
+        
+        IC1CON1bits.ICM = RISING_EDGE_TRIGGER_SETTING;
     }
+    
+    IFS0bits.IC1IF = 0;
 }
 
 //basic initialization for all pins
@@ -60,8 +70,8 @@ void Example_IC_Initialize(void)
     //See page 174 in the PIC24FJ128GA204 family documentation to find the list
     //of all values that can be mapped to the remappable pins
     //RPINR7 is the register that maps IC1 module functionality to a particular
-    //remappable pin, and 6 is RP2's pin number on this particular PIC
-    RPINR7 = 6;
+    //remappable pin, and 2 is RP2's remappable pin number
+    RPINR7bits.IC1R = 0b10;
     
     //clears the IC module's buffer of any previous data
     //ICxBUF contains the value of its associated timer at the point when the
@@ -103,10 +113,13 @@ int main(void)
     PIC_Initialize();
     Example_IC_Initialize();
     
+    TRISBbits.TRISB2 = 1;
+    
+    printf("test\n");
+    
     while(true)
     {
-        
     }
     
-    return 0;
+    return -1;
 }
