@@ -1,8 +1,6 @@
 /*
  * File:   PWM.c
- * Author: zdown
- *
- * Created on January 6, 2018, 2:21 AM
+ * Author: Zachary Downum
  */
 
 #include "mcc_generated_files/mcc.h"

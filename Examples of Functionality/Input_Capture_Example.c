@@ -1,3 +1,8 @@
+/*
+* File:    Input_Capture_Example.c
+* Author:  Zachary Downum
+*/
+
 #include "mcc_generated_files/mcc.h"
 
 //FCY is based off _XTAL_FREQ, the current system clock

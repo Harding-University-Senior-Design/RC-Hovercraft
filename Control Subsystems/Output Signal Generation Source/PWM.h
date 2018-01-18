@@ -1,21 +1,6 @@
 /* 
  * File:                PWM.h
  * Author:              Zachary Downum
- * Comments:            This is the header file to handle all PWM generation
- *                      This will handle two PWMs specifically:  the left and
- *                      right propulsion motors.  No other PWMs need to be
- *                      generated at this time.
- * 
- *                      The left motor PWM will be generated using the OC1
- *                      module and the right motor PWM will be generated using
- *                      the OC2 module.  In order to avoid confusion, all
- *                      variables will be abstracted to include "LeftMotor"
- *                      or "RightMotor" if it is unclear which it is referring
- *                      to.  The left motor PWM will be sent to RP0, and the
- *                      right motor PWM will be sent to RP1
- * 
- * 
- * Revision history: 
  */
 
 // This is a guard condition so that contents of this file are not included
