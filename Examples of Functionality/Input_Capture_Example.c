@@ -118,9 +118,8 @@ int main(void)
     PIC_Initialize();
     Example_IC_Initialize();
     
+    //sets pin B2 to input (rather than its default output configuration)
     TRISBbits.TRISB2 = 1;
-    
-    printf("test\n");
     
     while(true)
     {
