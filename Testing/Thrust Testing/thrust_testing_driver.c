@@ -18,12 +18,14 @@
 //basic initialization for all pins
 void PIC_Initialization(void)
 {
-    //changes all pins to digital
-    ANSB = 0x0000;
+    //changes all Port A and B pins to digital (except pin A4, which must be analog)
+	ANSA = 0b0000000000000000;
+    ANSB = 0b0000000000000000;
     Nop();
-    
-    //changes all pins to output (except for RP4, which is an input only pin)
-    TRISB = 0x0000;
+	
+    //changes all Port A and B pins to output (except for RP4, which is an input only pin)
+	TRISA = 0b0000000000000000;
+    TRISB = 0b0000000000000000;
     Nop();
 }
 
