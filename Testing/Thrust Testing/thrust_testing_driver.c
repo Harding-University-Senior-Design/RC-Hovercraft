@@ -40,11 +40,20 @@ void PWM_Module_Initialize(PWM_Module* test_motor)
     test_motor->UpdateFrequency = PWM_UpdateRightMotorFrequency;
 }
 
+void Motor_Driver_Initialize()
+{
+	//will be used to control the direction of the motor (1 = forward, 0 = backward)
+	LATAbits.LATA0 = 1;
+	//will be used to prevent the motor from entering sleep mode (1 = sleep mode off)
+	LATAbits.LATA1 = 1;
+}
+
 
 int main(void)
 {
     SYSTEM_Initialize();
     PIC_Initialization();
+	Motor_Driver_Initialize();
 
     PWM_Module Test_Motor;
     PWM_Module_Initialize(&Test_Motor);
