@@ -22,10 +22,10 @@ struct PWM_Module
     
     void (*Initialize)(struct PWM_Module*);
     
-    double (*GetCurrentDutyCycle)();
+    double (*GetDutyCycle)();
     void (*UpdateDutyCycle)(const struct PWM_Module*);
     
-    double (*GetCurrentFrequency)();
+    double (*GetFrequency)();
     void (*UpdateFrequency)(const struct PWM_Module*);
 };
 

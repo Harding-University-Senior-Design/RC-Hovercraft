@@ -1,5 +1,5 @@
 /*
-* File:    Input_Capture_Example.c
+* File:    InputCaptureExample.c
 * Author:  Zachary Downum
 */
 

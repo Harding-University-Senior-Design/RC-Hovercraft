@@ -30,14 +30,14 @@ void PIC_Initialization(void)
 void PWM_Module_Initialize(PWM_Module* left_motor, PWM_Module* right_motor)
 {
     left_motor->Initialize = PWM_LeftMotorInitialize;
-    left_motor->GetCurrentDutyCycle = PWM_GetLeftMotorDutyCycle;
-    left_motor->GetCurrentFrequency = PWM_GetLeftMotorFrequency;
+    left_motor->GetDutyCycle = PWM_GetLeftMotorDutyCycle;
+    left_motor->GetFrequency = PWM_GetLeftMotorFrequency;
     left_motor->UpdateDutyCycle = PWM_UpdateLeftMotorDutyCycle;
     left_motor->UpdateFrequency = PWM_UpdateLeftMotorFrequency;
     
     right_motor->Initialize = PWM_RightMotorInitialize;
-    right_motor->GetCurrentDutyCycle = PWM_GetRightMotorDutyCycle;
-    right_motor->GetCurrentFrequency = PWM_GetRightMotorFrequency;
+    right_motor->GetDutyCycle = PWM_GetRightMotorDutyCycle;
+    right_motor->GetFrequency = PWM_GetRightMotorFrequency;
     right_motor->UpdateDutyCycle = PWM_UpdateRightMotorDutyCycle;
     right_motor->UpdateFrequency = PWM_UpdateRightMotorFrequency;
 }
