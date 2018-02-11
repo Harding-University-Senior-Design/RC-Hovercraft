@@ -1,0 +1,4 @@
+RA0 will be used to control the motor's direction (tied to motor driver DIR input)
+One of the extra power pins on the testing board will be used to enable the motor driver (high sent to ~SLP pin)
+RP1 will be used to control motor power/PWM (tied to motor driver PWM input)
+One of the extra ground pins on the testing board will be used as the ground reference for the motor driver (low sent to all GND pins)
