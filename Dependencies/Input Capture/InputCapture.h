@@ -5,30 +5,19 @@
 
 #pragma once
 
+#define true 1
+#define false 0
+
 #define RISING_EDGE_TRIGGER_SETTING 0b011
 #define FALLING_EDGE_TRIGGER_SETTING 0b010
 
 typedef struct IC_Buffer IC_Buffer;
 
-//One issue with storing the rising and falling times
-//is that it is unknown when the user will call the Update function
-//on an IC module.  If they call Update when the rising and falling
-//times are mismatched (the rising time is from period 2, but the
-//falling time is still from period 1), then the calculations performed
-//using those values will be incorrect.
-
-//This IC_Buffer struct will avoid this by allowing the interrupt to write
-//to the buffer's "buffering" variables until the fallingTime is collected
-//for the period
 struct IC_Buffer
 {
 	int priorRisingTime;
 	int risingTime;
 	int fallingTime;
-	
-	int bufferingPriorRisingTime;
-	int bufferingRisingTime;
-	int bufferingFallingTime;
 }
 
 typedef struct IC_Module IC_Module;

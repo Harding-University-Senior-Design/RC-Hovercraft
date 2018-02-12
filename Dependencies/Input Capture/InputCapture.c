@@ -3,30 +3,55 @@
 * Author:  Zachary Downum
 */
 
+
+//One issue with storing the rising and falling times
+//is that it is unknown when the user will call the Update function
+//on an IC module.  If they call Update when the rising and falling
+//times are mismatched (the rising time is from period 2, but the
+//falling time is still from period 1), then the calculations performed
+//using those values will be incorrect.
+
+//Fortunately, each IC module has a built in buffer that can store up to
+//4 values in a FIFO pipeline.  This can be used to ensure the three
+//variables are updated atomically before they are used again by the
+//main program.
+
+//
+
+//right after fallingTime is collected, a function will be called to move all
+//of the data from the "buffering" variables into the 3 regular variables
+
+//these regular variables are the ones that will be used by all of the IC functions
+
+//in this way, all 3 variables are guaranteed to be taken from the same period
+//(even if it is delayed by a period), which will mitigate race conditions
 void __attribute__ ((__interrupt__, auto_psv)) _IC1Interrupt(void)
 {
     static int priorRisingTime = 0;
     static int risingTime = 0;
     static int fallingTime = 0;
     
-    //This example will create a pseudo-PWM with the same duty cycle
-    //and frequency of the input signal to port B5
+    //On a rising edge, the buffer is not read from (but the data is still kept in
+	//the buffer for later).  The only change is that it changes to falling-edge-trigger mode
     if (IC1CON1bits.ICM == RISING_EDGE_TRIGGER_SETTING)
     {
-        //the rising edge is how the frequency/period of the signal will be
-        //measured, so the prior one must be captured for comparison
-		//risingTime - priorRisingTime = clock cycles of the pwm period
-        priorRisingTime = risingTime;
-        risingTime = IC1BUF;
-        
         IC1CON1bits.ICM = FALLING_EDGE_TRIGGER_SETTING;
     }
     else if (IC1CON1bits.ICM == FALLING_EDGE_TRIGGER_SETTING)
     {
+		//because each input compare module has a built-in 4 value FIFO buffer,
+		//the risingTime persists in the buffer even after the rising edge was triggered
+		//we now pull this value out and put it in risingTime, and store the previous
+		//risingTime value to estimate the input signal's frequency
+		priorRisingTime = risingTime;
+        risingTime = IC1BUF;
+		
 		//the falling edge is the other piece of the puzzle that allows
 		//the frequency and period to be measured
 		//fallingTime - risingTime = number of clock cycles the pwm is "on"
 		//("on" time) / (period time) = duty cycle %
+		//because this was the last value stored in the buffer, it must be the last value
+		//to be retrieved from the buffer
         fallingTime = IC1BUF;
         
         IC1CON1bits.ICM = RISING_EDGE_TRIGGER_SETTING;
