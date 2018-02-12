@@ -79,3 +79,8 @@ void IC1_Initialize(void)
     //enables the interrupt
     IEC0bits.IC1IE = true;
 }
+
+void IC1_Update(IC_Module* IC1_Module)
+{
+	int logicHighClockCycles = 
+}
