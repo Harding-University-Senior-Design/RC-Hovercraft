@@ -2,6 +2,7 @@
 * File:    InputCapture.h
 * Author:  Zachary Downum
 */
+
 #pragma once
 
 #define RISING_EDGE_TRIGGER_SETTING 0b011
@@ -16,12 +17,12 @@ struct IC_Module
     int priorRisingTime;
     int risingTime;
 	int fallingTime;
+	
+	double dutyCycle;
+	double frequency;
     
     void (*Initialize)();
 	void (*Update)(const struct IC_Module*);
-    
-    double (*GetDutyCycle)(const IC_Module*);
-    double (*GetFrequency)(const IC_Module*);
 };
 
 //NOTE:  all these modules are intended to be used with
@@ -36,30 +37,30 @@ struct IC_Module
 //it must be named IC1Interrupt so it can
 //be recognized as an IC module #1 interrupt
 void __attribute__ ((__interrupt__, auto_psv)) _IC1Interrupt(void);
-void IC_1_Initialize(void);
-void IC_1_Update(const IC_Module* IC1_Module);
-double IC_1_GetDutyCycle(const IC_Module* IC1_Module);
-double IC_1_GetFrequency(const IC_Module* IC1_Module);
+void IC1_Initialize(void);
+void IC1_Update(const IC_Module* IC1_Module);
+double IC1_GetDutyCycle(const IC_Module* IC1_Module);
+double IC1_GetFrequency(const IC_Module* IC1_Module);
 
 //this interrupt is for propulsion thrust direction
 //will be used to manipulate the propulsion rudders
 //it must be named IC1Interrupt so it can
 //be recognized as an IC module #1 interrupt
 void __attribute__ ((__interrupt__, auto_psv)) _IC2Interrupt(void);
-void IC_2_Initialize(void);
-void IC_2_Update(const IC_Module* IC2_Module);
-double IC_2_GetDutyCycle(const IC_Module* IC2_Module);
-double IC_2_GetFrequency(const IC_Module* IC2_Module);
+void IC2_Initialize(void);
+void IC2_Update(const IC_Module* IC2_Module);
+double IC2_GetDutyCycle(const IC_Module* IC2_Module);
+double IC2_GetFrequency(const IC_Module* IC2_Module);
 
 //this interrupt is for lift engine throttle (magnitude) control
 //will be used to manipulate the servo connected to the lift engine throttle
 //it must be named IC1Interrupt so it can
 //be recognized as an IC module #1 interrupt
 void __attribute__ ((__interrupt__, auto_psv)) _IC3Interrupt(void);
-void IC_3_Initialize(void);
-void IC_3_Update(const IC_Module* IC3_Module);
-double IC_3_GetDutyCycle(const IC_Module* IC3_Module);
-double IC_3_GetFrequency(const IC_Module* IC3_Module);
+void IC3_Initialize(void);
+void IC3_Update(const IC_Module* IC3_Module);
+double IC3_GetDutyCycle(const IC_Module* IC3_Module);
+double IC3_GetFrequency(const IC_Module* IC3_Module);
 
 //this interrupt is for the kill switch (toggled on/off)
 //will be used to disable all output signals for the following subsystems:
@@ -70,23 +71,23 @@ double IC_3_GetFrequency(const IC_Module* IC3_Module);
 //it must be named IC1Interrupt so it can
 //be recognized as an IC module #1 interrupt
 void __attribute__ ((__interrupt__, auto_psv)) _IC4Interrupt(void);
-void IC_4_Initialize(void);
-void IC_4_Update(const IC_Module* IC4_Module);
-double IC_4_GetDutyCycle(const IC_Module* IC4_Module);
-double IC_4_GetFrequency(const IC_Module* IC4_Module);
+void IC4_Initialize(void);
+void IC4_Update(const IC_Module* IC4_Module);
+double IC4_GetDutyCycle(const IC_Module* IC4_Module);
+double IC4_GetFrequency(const IC_Module* IC4_Module);
 
 //Unused as of now in the hovercraft project, but it is here because
 //the framework should have the potential to use all 6 of the IC modules if necessary
 void __attribute__ ((__interrupt__, auto_psv)) _IC5Interrupt(void);
-void IC_5_Initialize(void);
-void IC_5_Update(const IC_Module* IC5_Module);
-double IC_5_GetDutyCycle(const IC_Module* IC5_Module);
-double IC_5_GetFrequency(const IC_Module* IC5_Module);
+void IC5_Initialize(void);
+void IC5_Update(const IC_Module* IC5_Module);
+double IC5_GetDutyCycle(const IC_Module* IC5_Module);
+double IC5_GetFrequency(const IC_Module* IC5_Module);
 
 //Unused as of now in the hovercraft project, but it is here because
 //the framework should have the potential to use all 6 of the IC modules if necessary
 void __attribute__ ((__interrupt__, auto_psv)) _IC6Interrupt(void);
-void IC_1_Initialize(void);
-void IC_1_Update(const IC_Module* IC6_Module);
-double IC_1_GetDutyCycle(const IC_Module* IC6_Module);
-double IC_1_GetFrequency(const IC_Module* IC6_Module);
+void IC6_Initialize(void);
+void IC6_Update(const IC_Module* IC6_Module);
+double IC6_GetDutyCycle(const IC_Module* IC6_Module);
+double IC6_GetFrequency(const IC_Module* IC6_Module);
