@@ -16,7 +16,9 @@
 //variables are updated atomically before they are used again by the
 //main program.
 
-//
+//This interrupt stores all 3 major values (current rising and falling times,
+//as well as the prior rising time) in one atomic operation (the same interrupt phase)
+//so that there is never a race condition.  
 
 //right after fallingTime is collected, a function will be called to move all
 //of the data from the "buffering" variables into the 3 regular variables
@@ -27,10 +29,6 @@
 //(even if it is delayed by a period), which will mitigate race conditions
 void __attribute__ ((__interrupt__, auto_psv)) _IC1Interrupt(void)
 {
-    static int priorRisingTime = 0;
-    static int risingTime = 0;
-    static int fallingTime = 0;
-    
     //On a rising edge, the buffer is not read from (but the data is still kept in
 	//the buffer for later).  The only change is that it changes to falling-edge-trigger mode
     if (IC1CON1bits.ICM == RISING_EDGE_TRIGGER_SETTING)
@@ -43,8 +41,8 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC1Interrupt(void)
 		//the risingTime persists in the buffer even after the rising edge was triggered
 		//we now pull this value out and put it in risingTime, and store the previous
 		//risingTime value to estimate the input signal's frequency
-		priorRisingTime = risingTime;
-        risingTime = IC1BUF;
+		IC1_Buffer.priorRisingTime = IC1_Buffer.risingTime;
+        IC1_Buffer.risingTime = IC1BUF;
 		
 		//the falling edge is the other piece of the puzzle that allows
 		//the frequency and period to be measured
@@ -52,7 +50,7 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC1Interrupt(void)
 		//("on" time) / (period time) = duty cycle %
 		//because this was the last value stored in the buffer, it must be the last value
 		//to be retrieved from the buffer
-        fallingTime = IC1BUF;
+        IC1_Buffer.fallingTime = IC1BUF;
         
         IC1CON1bits.ICM = RISING_EDGE_TRIGGER_SETTING;
     }
@@ -107,5 +105,13 @@ void IC1_Initialize(void)
 
 void IC1_Update(IC_Module* IC1_Module)
 {
-	int logicHighClockCycles = 
+	//these are the basic properties of a standard PWM square wave signal
+	int logicHighClockCycles = fallingTime - risingTime;
+	int fullPeriodClockCycles = risingTime - priorRisingTime;
+	
+	IC1_Module.dutyCycle = (double) logicHighClockCycles / fullPeriodClockCycles;
+	
+	double secondsPerPeriod = fullPeriodClockCycles / FCY;
+	
+	IC1_Buffer.frequency = (double) 1.0 / secondsPerPeriod;
 }

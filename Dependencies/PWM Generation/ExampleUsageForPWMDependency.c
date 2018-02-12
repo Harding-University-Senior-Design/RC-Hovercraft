@@ -67,10 +67,10 @@ int main(void)
         int i;
         for (i = 0; i <= 100; i += 10)
         {
-            Left_Motor.duty_cycle_percentage = i;
+            Left_Motor.dutyCyclePercentage = i;
             Left_Motor.UpdateDutyCycle(&Left_Motor);
             
-            Right_Motor.duty_cycle_percentage = i;
+            Right_Motor.dutyCyclePercentage = i;
             Right_Motor.UpdateDutyCycle(&Right_Motor);
             __delay_ms(5000);
         }

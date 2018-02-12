@@ -16,7 +16,7 @@ typedef struct PWM_Module PWM_Module;
 struct PWM_Module
 {
     //e.g. a 90.5% duty cycle would be represented as 90.5
-    double duty_cycle_percentage;
+    double dutyCyclePercentage;
     //in Hertz
     int frequency;
     
@@ -74,7 +74,7 @@ void PWM_OC1_Initialize(PWM_Module* OC1_PWM_module);
 double PWM_Get_OC1_DutyCycle(void);
 //calculates the frequency using OCRS and Tcy with the equation in Example 15-1
 double PWM_Get_OC1_Frequency(void);
-//sets the proper OCR register based on the duty_cycle_percentage variable
+//sets the proper OCR register based on the dutyCyclePercentage variable
 //within the PWM_Module struct
 void PWM_Update_OC1_DutyCycle(const PWM_Module* OC1_PWM_module);
 //alters the proper OCR and OCRS registers based on the frequency variable

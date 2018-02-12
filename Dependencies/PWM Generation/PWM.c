@@ -25,7 +25,7 @@ void PWM_OC1_Initialize(PWM_Module* OC1_PWM_module)
     OC1_RP = OC1_Remappable_Pin_Reference;
     
     //sets the default duty cycle percentage to 0 to reflect the register values
-    OC1_PWM_module->duty_cycle_percentage = 0;
+    OC1_PWM_module->dutyCyclePercentage = 0;
     //sets the default period to 15000 (Hz) to reflect the register values
     OC1_PWM_module->frequency = 15000;
     
@@ -65,7 +65,7 @@ void PWM_Update_OC1_DutyCycle(const PWM_Module* OC1_PWM_module)
 	//Therefore, (duty cycle percentage) * OCRS / 100 = number of logic high cycles
 	//This is new value is stored into OCR to edit the duty cycle, OCRS does not change
 	//Because the frequency does not change
-    int logicHighClockCycles = (OC1_PWM_module->duty_cycle_percentage * OC1RS / 100) + PWM_ROUNDING_OFFSET;
+    int logicHighClockCycles = (OC1_PWM_module->dutyCyclePercentage * OC1RS / 100) + PWM_ROUNDING_OFFSET;
     OC1R = logicHighClockCycles;
 }
 
@@ -88,7 +88,7 @@ void PWM_OC2_Initialize(PWM_Module* OC2_PWM_module)
     
     OC2_RP = OC2_Remappable_Pin_Reference;
     
-    OC2_PWM_module->duty_cycle_percentage = 0;
+    OC2_PWM_module->dutyCyclePercentage = 0;
     OC2_PWM_module->frequency = 15000;
     
     OC2_PWM_module->UpdateFrequency(OC2_PWM_module);
@@ -115,7 +115,7 @@ double PWM_Get_OC2_Frequency(void)
 
 void PWM_Update_OC2_DutyCycle(const PWM_Module* OC2_PWM_module)
 {
-    int logicHighClockCycles = (OC2_PWM_module->duty_cycle_percentage * OC2RS / 100) + PWM_ROUNDING_OFFSET;
+    int logicHighClockCycles = (OC2_PWM_module->dutyCyclePercentage * OC2RS / 100) + PWM_ROUNDING_OFFSET;
     OC2R = logicHighClockCycles;
 }
 
@@ -136,7 +136,7 @@ void PWM_OC3_Initialize(PWM_Module* OC3_PWM_module)
     
     OC3_RP = OC3_Remappable_Pin_Reference;
     
-    OC3_PWM_module->duty_cycle_percentage = 0;
+    OC3_PWM_module->dutyCyclePercentage = 0;
     OC3_PWM_module->frequency = 15000;
     
     OC3_PWM_module->UpdateFrequency(OC3_PWM_module);
@@ -163,7 +163,7 @@ double PWM_Get_OC3_Frequency(void)
 
 void PWM_Update_OC3_DutyCycle(const PWM_Module* OC3_PWM_module)
 {
-    int logicHighClockCycles = (OC3_PWM_module->duty_cycle_percentage * OC3RS / 100) + PWM_ROUNDING_OFFSET;
+    int logicHighClockCycles = (OC3_PWM_module->dutyCyclePercentage * OC3RS / 100) + PWM_ROUNDING_OFFSET;
     OC3R = logicHighClockCycles;
 }
 
@@ -184,7 +184,7 @@ void PWM_OC4_Initialize(PWM_Module* OC4_PWM_module)
     
     OC4_RP = OC4_Remappable_Pin_Reference;
     
-    OC4_PWM_module->duty_cycle_percentage = 0;
+    OC4_PWM_module->dutyCyclePercentage = 0;
     OC4_PWM_module->frequency = 15000;
     
     OC4_PWM_module->UpdateFrequency(OC4_PWM_module);
@@ -211,7 +211,7 @@ double PWM_Get_OC4_Frequency(void)
 
 void PWM_Update_OC4_DutyCycle(const PWM_Module* OC4_PWM_module)
 {
-    int logicHighClockCycles = (OC4_PWM_module->duty_cycle_percentage * OC4RS / 100) + PWM_ROUNDING_OFFSET;
+    int logicHighClockCycles = (OC4_PWM_module->dutyCyclePercentage * OC4RS / 100) + PWM_ROUNDING_OFFSET;
     OC4R = logicHighClockCycles;
 }
 
@@ -232,7 +232,7 @@ void PWM_OC5_Initialize(PWM_Module* OC5_PWM_module)
     
     OC5_RP = OC5_Remappable_Pin_Reference;
     
-    OC5_PWM_module->duty_cycle_percentage = 0;
+    OC5_PWM_module->dutyCyclePercentage = 0;
     OC5_PWM_module->frequency = 15000;
     
     OC5_PWM_module->UpdateFrequency(OC5_PWM_module);
@@ -259,7 +259,7 @@ double PWM_Get_OC5_Frequency(void)
 
 void PWM_Update_OC5_DutyCycle(const PWM_Module* OC5_PWM_module)
 {
-    int logicHighClockCycles = (OC5_PWM_module->duty_cycle_percentage * OC5RS / 100) + PWM_ROUNDING_OFFSET;
+    int logicHighClockCycles = (OC5_PWM_module->dutyCyclePercentage * OC5RS / 100) + PWM_ROUNDING_OFFSET;
     OC5R = logicHighClockCycles;
 }
 
@@ -280,7 +280,7 @@ void PWM_OC6_Initialize(PWM_Module* OC6_PWM_module)
     
     OC6_RP = OC6_Remappable_Pin_Reference;
     
-    OC6_PWM_module->duty_cycle_percentage = 0;
+    OC6_PWM_module->dutyCyclePercentage = 0;
     OC6_PWM_module->frequency = 15000;
     
     OC6_PWM_module->UpdateFrequency(OC6_PWM_module);
@@ -307,7 +307,7 @@ double PWM_Get_OC6_Frequency(void)
 
 void PWM_Update_OC6_DutyCycle(const PWM_Module* OC6_PWM_module)
 {
-    int logicHighClockCycles = (OC6_PWM_module->duty_cycle_percentage * OC6RS / 100) + PWM_ROUNDING_OFFSET;
+    int logicHighClockCycles = (OC6_PWM_module->dutyCyclePercentage * OC6RS / 100) + PWM_ROUNDING_OFFSET;
     OC6R = logicHighClockCycles;
 }
 
