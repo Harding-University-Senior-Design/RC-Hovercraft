@@ -50,43 +50,69 @@ struct PWM_Module
 //          calculations using the Tcy value)
 //          See Example 15-1 (page 215) for calculation information
 //          Essentially, OCxR / OCxRS = duty cycle % for the PWM module
-#define Left_Motor_OC_CON1 OC1CON1
-#define Left_Motor_OC_CON1bits OC1CON1bits
-#define Left_Motor_OC_CON2 OC1CON2
-#define Left_Motor_OC_CON2bits OC1CON2bits
-#define Left_Motor_RP RPOR0bits.RP0R
-#define Left_Motor_Remappable_Pin_Reference 13
-#define Left_Motor_OCR OC1R
-#define Left_Motor_OCRS OC1RS
+#define OC1_RP RPOR0bits.RP0R
+#define OC1_Remappable_Pin_Reference 13
 
-#define Right_Motor_OC_CON1 OC2CON1
-#define Right_Motor_OC_CON1bits OC2CON1bits
-#define Right_Motor_OC_CON2 OC2CON2
-#define Right_Motor_OC_CON2bits OC2CON2bits
-#define Right_Motor_RP RPOR0bits.RP1R
-#define Right_Motor_Remappable_Pin_Reference 14
-#define Right_Motor_OCR OC2R
-#define Right_Motor_OCRS OC2RS
+#define OC2_RP RPOR0bits.RP1R
+#define OC2_Remappable_Pin_Reference 14
 
-//Initializes the left motor's PWM signal using the OC1 module and the RP0 pin
-void PWM_LeftMotorInitialize(PWM_Module* left_motor);
-//Initializes the left motor's PWM signal using the OC2 module and the RP1 pin
-void PWM_RightMotorInitialize(PWM_Module* right_motor);
+#define OC3_RP RPOR1bits.RP2R
+#define OC3_Remappable_Pin_Reference 15
 
+#define OC4_RP RPOR1bits.RP3R
+#define OC4_Remappable_Pin_Reference 16
+
+#define OC5_RP RPOR4bits.RP9R
+#define OC5_Remappable_Pin_Reference 17
+
+#define OC6_RP RPOR5bits.RP10R
+#define OC6_Remappable_Pin_Reference 18
+
+//Functions to generate a PWM signal using the OC1 module and the RP0 pin
+void PWM_OC1_Initialize(PWM_Module* OC1_PWM_module);
 //returns OCR / OCRS for the motor's PWM module, representing the duty cycle %
-double PWM_GetLeftMotorDutyCycle(void);
-double PWM_GetRightMotorDutyCycle(void);
-
+double PWM_Get_OC1_DutyCycle(void);
 //calculates the frequency using OCRS and Tcy with the equation in Example 15-1
-double PWM_GetLeftMotorFrequency(void);
-double PWM_GetRightMotorFrequency(void);
-
+double PWM_Get_OC1_Frequency(void);
 //sets the proper OCR register based on the duty_cycle_percentage variable
 //within the PWM_Module struct
-void PWM_UpdateLeftMotorDutyCycle(const PWM_Module* left_motor);
-void PWM_UpdateRightMotorDutyCycle(const PWM_Module* right_motor);
-
+void PWM_Update_OC1_DutyCycle(const PWM_Module* OC1_PWM_module);
 //alters the proper OCR and OCRS registers based on the frequency variable
 //within the PWM_Module struct (in Hz)
-void PWM_UpdateLeftMotorFrequency(const PWM_Module* left_motor);
-void PWM_UpdateRightMotorFrequency(const PWM_Module* right_motor);
+void PWM_Update_OC1_Frequency(const PWM_Module* OC1_PWM_module);
+
+
+//Functions to generate a PWM signal using the OC2 module and the RP1 pin
+void PWM_OC2_Initialize(PWM_Module* OC2_PWM_module);
+double PWM_Get_OC2_DutyCycle(void);
+double PWM_Get_OC2_Frequency(void);
+void PWM_Update_OC2_DutyCycle(const PWM_Module* OC2_PWM_module);
+void PWM_Update_OC2_Frequency(const PWM_Module* OC2_PWM_module);
+
+//Functions to generate a PWM signal using the OC3 module and the RP2 pin
+void PWM_OC3_Initialize(PWM_Module* OC3_PWM_module);
+double PWM_Get_OC3_DutyCycle(void);
+double PWM_Get_OC3_Frequency(void);
+void PWM_Update_OC3_DutyCycle(const PWM_Module* OC3_PWM_module);
+void PWM_Update_OC3_Frequency(const PWM_Module* OC3_PWM_module);
+
+//Functions to generate a PWM signal using the OC4 module and the RP3 pin
+void PWM_OC4_Initialize(PWM_Module* OC4_PWM_module);
+double PWM_Get_OC4_DutyCycle(void);
+double PWM_Get_OC4_Frequency(void);
+void PWM_Update_OC4_DutyCycle(const PWM_Module* OC4_PWM_module);
+void PWM_Update_OC4_Frequency(const PWM_Module* OC4_PWM_module);
+
+//Functions to generate a PWM signal using the OC5 module and the RP9 pin
+void PWM_OC5_Initialize(PWM_Module* OC5_PWM_module);
+double PWM_Get_OC5_DutyCycle(void);
+double PWM_Get_OC5_Frequency(void);
+void PWM_Update_OC5_DutyCycle(const PWM_Module* OC5_PWM_module);
+void PWM_Update_OC5_Frequency(const PWM_Module* OC5_PWM_module);
+
+//Functions to generate a PWM signal using the OC6 module and the RP10 pin
+void PWM_OC4_Initialize(PWM_Module* OC6_PWM_module);
+double PWM_Get_OC6_DutyCycle(void);
+double PWM_Get_OC6_Frequency(void);
+void PWM_Update_OC6_DutyCycle(const PWM_Module* OC6_PWM_module);
+void PWM_Update_OC6_Frequency(const PWM_Module* OC6_PWM_module);

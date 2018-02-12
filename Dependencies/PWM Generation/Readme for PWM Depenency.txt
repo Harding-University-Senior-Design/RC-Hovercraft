@@ -16,4 +16,6 @@ Therefore, you will be able to use this dependency and pick and choose which pin
 
 The 5V tolerant pins on this PIC have been intentially skipped, because this dependency is not intended to be used to generate a 5V output signal.  For the purposes of this project, the only thing that the 5V tolerant pins will be used for is input from the wireless controller's receiver (which naturally runs at 3.8V to 4.3V, too high for a standard IO pin on this PIC to handle).
 
-Follow the base initialization demonstrated in the ExampleUsageForPWMDependency program, specifically the PWM_Module_Initialize function.  Once that is set up, you can use the PWM_Module objects as you would any other C struct without having to know the the details of how an OC module works on this PIC.
+*	Follow the base initialization demonstrated in the ExampleUsageForPWMDependency program, specifically the PWM_Module_Initialize function.  Once that is set up, you can use the PWM_Module objects as you would any other C struct without having to know the the details of how an OC module works on this PIC.
+*	It is suggested that you name the corresponding PWM_module object after its intended use (as seen in the example, where the PWM modules are named after the left and right motors that it is controlling)
+*	If all 6 OC modules are not needed, it is possible to delete all of the functions for the OC modules you are not using (in both the PWM.h and PWM.c files) to save on space when this dependency is written to the PIC.

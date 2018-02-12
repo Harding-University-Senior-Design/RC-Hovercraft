@@ -29,17 +29,17 @@ void PIC_Initialization(void)
 
 void PWM_Module_Initialize(PWM_Module* left_motor, PWM_Module* right_motor)
 {
-    left_motor->Initialize = PWM_LeftMotorInitialize;
-    left_motor->GetDutyCycle = PWM_GetLeftMotorDutyCycle;
-    left_motor->GetFrequency = PWM_GetLeftMotorFrequency;
-    left_motor->UpdateDutyCycle = PWM_UpdateLeftMotorDutyCycle;
-    left_motor->UpdateFrequency = PWM_UpdateLeftMotorFrequency;
+    left_motor->Initialize = PWM_OC1_Initialize;
+    left_motor->GetDutyCycle = PWM_Get_OC1_DutyCycle;
+    left_motor->GetFrequency = PWM_Get_OC1_Frequency;
+    left_motor->UpdateDutyCycle = PWM_Update_OC1_DutyCycle;
+    left_motor->UpdateFrequency = PWM_Update_OC1_Frequency;
     
-    right_motor->Initialize = PWM_RightMotorInitialize;
-    right_motor->GetDutyCycle = PWM_GetRightMotorDutyCycle;
-    right_motor->GetFrequency = PWM_GetRightMotorFrequency;
-    right_motor->UpdateDutyCycle = PWM_UpdateRightMotorDutyCycle;
-    right_motor->UpdateFrequency = PWM_UpdateRightMotorFrequency;
+    right_motor->Initialize = PWM_OC2_Initialize;
+    right_motor->GetDutyCycle = PWM_Get_OC2_DutyCycle;
+    right_motor->GetFrequency = PWM_Get_OC2_Frequency;
+    right_motor->UpdateDutyCycle = PWM_Update_OC2_DutyCycle;
+    right_motor->UpdateFrequency = PWM_Update_OC2_Frequency;
 }
 
 
