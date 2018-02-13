@@ -113,5 +113,5 @@ void IC1_Update(IC_Module* IC1_Module)
 	
 	double secondsPerPeriod = fullPeriodClockCycles / FCY;
 	
-	IC1_Buffer.frequency = (double) 1.0 / secondsPerPeriod;
+	IC1_Module.frequency = (double) 1.0 / secondsPerPeriod;
 }
