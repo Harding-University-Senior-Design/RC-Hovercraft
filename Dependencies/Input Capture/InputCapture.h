@@ -24,7 +24,7 @@ struct IC_Buffer
 	int priorRisingTime;
 	int risingTime;
 	int fallingTime;
-}
+};
 
 typedef struct IC_Module IC_Module;
 
