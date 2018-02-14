@@ -2,7 +2,7 @@ This depedency's main purpose is to create an abstraction layer between the spec
 
 This dependency is ONLY intended for use with Microchip's PIC24FJ128GA202 microcontroller.  Use with any other microcontroller is not guaranteed to work--and may actually damage the component.
 
-6 pins are assigned modules in this dependency.  There are only 6 OC modules on this PIC, which is why only up to 6 pins can be used.
+Up to 6 pins are assigned modules in this dependency.  Each OC module can be initialized independently, so you only have to use the number of modules you need.
 
 RP0 (Pin 4):	OC Module 1, used to generate a PWM signal
 RP1 (Pin 5):	OC Module 2, used to generate a PWM signal

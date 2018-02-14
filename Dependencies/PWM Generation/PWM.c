@@ -11,14 +11,22 @@
 #define TCY ((double)1.0 / FCY)
 
 #include <xc.h>
+#include <stdlib.h>
+#include <libpic30.h>
 #include "PWM.h"
 
 #define PWM_ROUNDING_OFFSET 0.5
 
 void PWM_OC1_Initialize(PWM_Module* OC1_PWM_module)
-{
+{	
     //disables the left motor's OC while the pwm is set up
     OC1CON1 = 0x0000;
+    
+	//sets the pin to be digital and an output to ensure PWM is generated properly on
+	//the pin
+	ANSBbits.ANSB0 = 0;
+	TRISBbits.TRISB0 = 0;
+	Nop();
     
     //sets the remappable pin RP0 to output the value of OC1 (the output compare
     //pin that is being used to generate the PWM)
@@ -86,6 +94,10 @@ void PWM_OC2_Initialize(PWM_Module* OC2_PWM_module)
 {
     OC2CON1 = 0x0000;
     
+    ANSBbits.ANSB1 = 0;
+	TRISBbits.TRISB1 = 0;
+    Nop();
+    
     OC2_RP = OC2_Remappable_Pin_Reference;
     
     OC2_PWM_module->dutyCyclePercentage = 0;
@@ -133,6 +145,10 @@ void PWM_Update_OC2_Frequency(const PWM_Module* OC2_PWM_module)
 void PWM_OC3_Initialize(PWM_Module* OC3_PWM_module)
 {
     OC3CON1 = 0x0000;
+    
+    ANSBbits.ANSB2 = 0;
+	TRISBbits.TRISB2 = 0;
+    Nop();
     
     OC3_RP = OC3_Remappable_Pin_Reference;
     
@@ -182,6 +198,10 @@ void PWM_OC4_Initialize(PWM_Module* OC4_PWM_module)
 {
     OC4CON1 = 0x0000;
     
+    ANSBbits.ANSB3 = 0;
+	TRISBbits.TRISB3 = 0;
+    Nop();
+    
     OC4_RP = OC4_Remappable_Pin_Reference;
     
     OC4_PWM_module->dutyCyclePercentage = 0;
@@ -230,6 +250,10 @@ void PWM_OC5_Initialize(PWM_Module* OC5_PWM_module)
 {
     OC5CON1 = 0x0000;
     
+    ANSBbits.ANSB9 = 0;
+	TRISBbits.TRISB9 = 0;
+	Nop();
+    
     OC5_RP = OC5_Remappable_Pin_Reference;
     
     OC5_PWM_module->dutyCyclePercentage = 0;
@@ -277,6 +301,9 @@ void PWM_Update_OC5_Frequency(const PWM_Module* OC5_PWM_module)
 void PWM_OC6_Initialize(PWM_Module* OC6_PWM_module)
 {
     OC6CON1 = 0x0000;
+    
+	TRISBbits.TRISB10 = 0;
+    Nop();
     
     OC6_RP = OC6_Remappable_Pin_Reference;
     

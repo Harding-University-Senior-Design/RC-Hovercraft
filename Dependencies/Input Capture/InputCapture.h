@@ -41,8 +41,10 @@ struct IC_Module
 	double frequency;
     
     void (*Initialize)();
-	void (*Update)(const struct IC_Module*);
+	void (*Update)(struct IC_Module*);
 };
+
+
 
 //NOTE:  all these modules are intended to be used with
 //       a 3.3V square wave (pwm-type) input signal by
@@ -51,12 +53,6 @@ struct IC_Module
 //       signal with this framework will result in undefined
 //       behavior.
 
-//this buffer will be used by the interrupt to store values used to
-//calculate duty cycle % and frequency.
-//It will also be used by the Update function to calculate the duty
-//cycle and frequency and store those into the IC_Module's variables
-//this is true of all buffers initialized in this file
-IC_Buffer IC1_Buffer;
 //this interrupt is for propulsion thrust magnitude
 //will be used to manipulate the speed of the propulsion motors
 //it must be named IC1Interrupt so it can
@@ -65,7 +61,7 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC1Interrupt(void);
 void IC1_Initialize(void);
 void IC1_Update(IC_Module* IC1_Module);
 
-IC_Buffer IC2_Buffer;
+
 //this interrupt is for propulsion thrust direction
 //will be used to manipulate the propulsion rudders
 //it must be named IC2Interrupt so it can
@@ -74,7 +70,7 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC2Interrupt(void);
 void IC2_Initialize(void);
 void IC2_Update(IC_Module* IC2_Module);
 
-IC_Buffer IC3_Buffer;
+
 //this interrupt is for lift engine throttle (magnitude) control
 //will be used to manipulate the servo connected to the lift engine throttle
 //it must be named IC3Interrupt so it can
@@ -83,7 +79,7 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC3Interrupt(void);
 void IC3_Initialize(void);
 void IC3_Update(IC_Module* IC3_Module);
 
-IC_Buffer IC4_Buffer;
+
 //this interrupt is for the kill switch (toggled on/off)
 //will be used to disable all output signals for the following subsystems:
 //    Lift Engine Throttle Control
@@ -96,14 +92,14 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC4Interrupt(void);
 void IC4_Initialize(void);
 void IC4_Update(IC_Module* IC4_Module);
 
-IC_Buffer IC5_Buffer;
+
 //Unused as of now in the hovercraft project, but it is here because
 //the framework should have the potential to use all 6 of the IC modules if necessary
 void __attribute__ ((__interrupt__, auto_psv)) _IC5Interrupt(void);
 void IC5_Initialize(void);
 void IC5_Update(IC_Module* IC5_Module);
 
-IC_Buffer IC6_Buffer;
+
 //Unused as of now in the hovercraft project, but it is here because
 //the framework should have the potential to use all 6 of the IC modules if necessary
 void __attribute__ ((__interrupt__, auto_psv)) _IC6Interrupt(void);

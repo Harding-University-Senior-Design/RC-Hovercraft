@@ -5,6 +5,19 @@
 
 #include "InputCapture.h"
 
+
+//this buffer will be used by the interrupt to store values used to
+//calculate duty cycle % and frequency.
+//It will also be used by the Update function to calculate the duty
+//cycle and frequency and store those into the IC_Module's variables
+//this is true of all buffers initialized in this file
+IC_Buffer IC1_Buffer;
+IC_Buffer IC2_Buffer;
+IC_Buffer IC3_Buffer;
+IC_Buffer IC4_Buffer;
+IC_Buffer IC5_Buffer;
+IC_Buffer IC6_Buffer;
+
 //One issue with storing the rising and falling times
 //is that it is unknown when the user will call the Update function
 //on an IC module.  If they call Update when the rising and falling
