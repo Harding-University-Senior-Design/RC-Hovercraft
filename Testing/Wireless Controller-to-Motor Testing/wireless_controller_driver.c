@@ -5,16 +5,16 @@
 
 #include "mcc_generated_files/mcc.h"
 
+//FCY is based off _XTAL_FREQ, the current system clock
+//(see system_configuration.h)
+#define FCY (_XTAL_FREQ / 2)
+
 #include <stdlib.h>
 #include <libpic30.h>
 #include <xc.h>
 
 #include "PWM.h"
 #include "InputCapture.h"
-
-//FCY is based off _XTAL_FREQ, the current system clock
-//(see system_configuration.h)
-#define FCY (_XTAL_FREQ / 2)
 
 //basic initialization for all pins
 void PIC_Initialization(void)
@@ -62,12 +62,24 @@ int main(void)
     
     while(true)
     {
-        __delay_ms(5);
+        __delay_ms(2);
         Test_Input.Update(&Test_Input);
         
-        Test_Motor.dutyCyclePercentage = Test_Input.dutyCyclePercentage;
-        Test_Motor.frequency = Test_Input.frequency;
-        Test_Motor.UpdateFrequency(&Test_Motor);
+		//7.29 is approximately the lowest duty cycle of the signal
+		//0.065 is the ratio of the difference in duty cycle (high - low) / 100, which makes
+		//the output duty cycle 100% when the input signal is at its maximum duty cycle
+        Test_Motor.dutyCyclePercentage = (Test_Input.dutyCyclePercentage - 7.29) / 0.065;
+        
+        if (Test_Motor.dutyCyclePercentage < 0)
+        {
+            Test_Motor.dutyCyclePercentage = 0;
+        }
+        else if (Test_Motor.dutyCyclePercentage > 100)
+        {
+            Test_Motor.dutyCyclePercentage = 100;
+        }
+        
+        Test_Motor.UpdateDutyCycle(&Test_Motor);
     }
     
     return -1;
