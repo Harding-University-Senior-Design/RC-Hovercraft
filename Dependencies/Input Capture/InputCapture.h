@@ -5,18 +5,6 @@
 
 #pragma once
 
-#include "mcc_generated_files/mcc.h"
-
-//FCY is based off _XTAL_FREQ, the current system clock
-//(see system_configuration.h)
-#define FCY (_XTAL_FREQ / 2)
-
-#define true 1
-#define false 0
-
-#define RISING_EDGE_TRIGGER_SETTING 0b011
-#define FALLING_EDGE_TRIGGER_SETTING 0b010
-
 typedef struct IC_Buffer IC_Buffer;
 
 struct IC_Buffer

@@ -3,7 +3,21 @@
 * Author:  Zachary Downum
 */
 
+#include "mcc_generated_files/mcc.h"
 #include "InputCapture.h"
+
+//FCY is based off _XTAL_FREQ, the current system clock
+//(see system_configuration.h)
+#define FCY ((double)_XTAL_FREQ / 2)
+
+#define TIMER_PRESCALER 64
+#define TIMER_FREQUENCY ((double)FCY / TIMER_PRESCALER)
+
+#define true 1
+#define false 0
+
+#define RISING_EDGE_TRIGGER_SETTING 0b011
+#define FALLING_EDGE_TRIGGER_SETTING 0b010
 
 
 //this buffer will be used by the interrupt to store values used to
@@ -77,6 +91,11 @@ void IC1_Initialize(void)
     //disables the IC1 module while it is configured
     IC1CON1 = 0x0000;
     
+    //configures pin B4/RP4 as an input (unnecessary in this case, as RPI4
+    //is only ever an input pin anyway)
+	TRISBbits.TRISB4 = 1;
+	Nop();
+    
     //See page 174 in the PIC24FJ128GA204 family documentation to find the list
     //of all values that can be mapped to the remappable pins
     //RPINR7 is the register that maps IC1 module functionality to a particular
@@ -91,12 +110,22 @@ void IC1_Initialize(void)
         int junk = IC1BUF;
     }
     
+    //turns timer1 off to configure it
+    T1CON = 0b0000000000000000;
+    //sets a 1:64 input clock prescaler, which increments the timer every
+    //8th clock cycle (from Fcy by default)
+    T1CONbits.TCKPS = 0b10;
+    //sets this timer's clock source to Fcy
+    T1CONbits.TCS = 0b0;
+    //turns timer1 back on after it is configured
+    T1CONbits.TON = 1;
+    
     //desyncs the IC module from any other module as we do not want it to
     //operate in tandem with any other module
     IC1CON2bits.SYNCSEL = 0b00000;
     
-    //the module uses the system clock (Fcy) as its timing source
-    IC1CON1bits.ICTSEL = 0b111;
+    //the module uses timer1 (prescaler 1:8 based on Fcy) as its timing source
+    IC1CON1bits.ICTSEL = 0b100;
     
     //sets the IC module to generate an interrupt on every capture event
     IC1CON1bits.ICI = 0b00;
@@ -128,7 +157,7 @@ void IC1_Update(IC_Module* IC1_Module)
     //multiplied by 100, so 10.5 represents 10.5%
 	IC1_Module->dutyCyclePercentage = (double) logicHighClockCycles / fullPeriodClockCycles * 100;
 	
-	double secondsPerPeriod = fullPeriodClockCycles / FCY;
+	double secondsPerPeriod = (double) fullPeriodClockCycles / TIMER_FREQUENCY;
 	
 	IC1_Module->frequency = (double) 1.0 / secondsPerPeriod;
 }
@@ -156,6 +185,10 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC2Interrupt(void)
 void IC2_Initialize(void)
 {
     IC2CON1 = 0x0000;
+    
+	TRISBbits.TRISB5 = 1;
+	Nop();
+    
 	//the 5 represents RP5
     RPINR7bits.IC2R = 0b101;
     
@@ -164,8 +197,13 @@ void IC2_Initialize(void)
         int junk = IC2BUF;
     }
     
+    T1CON = 0b0000000000000000;
+    T1CONbits.TCKPS = 0b10;
+    T1CONbits.TCS = 0b0;
+    T1CONbits.TON = 1;
+    
     IC2CON2bits.SYNCSEL = 0b00000;
-    IC2CON1bits.ICTSEL = 0b111;
+    IC2CON1bits.ICTSEL = 0b100;
     IC2CON1bits.ICI = 0b00;
     IC2CON1bits.ICM = RISING_EDGE_TRIGGER_SETTING;
 	
@@ -181,7 +219,7 @@ void IC2_Update(IC_Module* IC2_Module)
 	
 	IC2_Module->dutyCyclePercentage = ((double) logicHighClockCycles / fullPeriodClockCycles) * 100;
 	
-	double secondsPerPeriod = fullPeriodClockCycles / FCY;
+	double secondsPerPeriod = (double) fullPeriodClockCycles / TIMER_FREQUENCY;
 	
 	IC2_Module->frequency = (double) 1.0 / secondsPerPeriod;
 }
@@ -209,6 +247,10 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC3Interrupt(void)
 void IC3_Initialize(void)
 {
     IC3CON1 = 0x0000;
+    
+	TRISBbits.TRISB6 = 1;
+	Nop();
+    
 	//the 6 represents RP6
     RPINR8bits.IC3R = 0b110;
     
@@ -217,8 +259,13 @@ void IC3_Initialize(void)
         int junk = IC3BUF;
     }
     
+    T1CON = 0b0000000000000000;
+    T1CONbits.TCKPS = 0b10;
+    T1CONbits.TCS = 0b0;
+    T1CONbits.TON = 1;
+    
     IC3CON2bits.SYNCSEL = 0b00000;
-    IC3CON1bits.ICTSEL = 0b111;
+    IC3CON1bits.ICTSEL = 0b100;
     IC3CON1bits.ICI = 0b00;
     IC3CON1bits.ICM = RISING_EDGE_TRIGGER_SETTING;
 	
@@ -234,7 +281,7 @@ void IC3_Update(IC_Module* IC3_Module)
 	
 	IC3_Module->dutyCyclePercentage = ((double) logicHighClockCycles / fullPeriodClockCycles) * 100;
 	
-	double secondsPerPeriod = fullPeriodClockCycles / FCY;
+	double secondsPerPeriod = (double) fullPeriodClockCycles / TIMER_FREQUENCY;
 	
 	IC3_Module->frequency = (double) 1.0 / secondsPerPeriod;
 }
@@ -262,6 +309,10 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC4Interrupt(void)
 void IC4_Initialize(void)
 {
     IC4CON1 = 0x0000;
+    
+	TRISBbits.TRISB7 = 1;
+	Nop();
+    
 	//the 7 represents RP7
     RPINR8bits.IC4R = 0b111;
     
@@ -270,8 +321,13 @@ void IC4_Initialize(void)
         int junk = IC4BUF;
     }
     
+    T1CON = 0b0000000000000000;
+    T1CONbits.TCKPS = 0b10;
+    T1CONbits.TCS = 0b0;
+    T1CONbits.TON = 1;
+    
     IC4CON2bits.SYNCSEL = 0b00000;
-    IC4CON1bits.ICTSEL = 0b111;
+    IC4CON1bits.ICTSEL = 0b100;
     IC4CON1bits.ICI = 0b00;
     IC4CON1bits.ICM = RISING_EDGE_TRIGGER_SETTING;
 	
@@ -287,7 +343,7 @@ void IC4_Update(IC_Module* IC4_Module)
 	
 	IC4_Module->dutyCyclePercentage = ((double) logicHighClockCycles / fullPeriodClockCycles) * 100;
 	
-	double secondsPerPeriod = fullPeriodClockCycles / FCY;
+	double secondsPerPeriod = (double) fullPeriodClockCycles / TIMER_FREQUENCY;
 	
 	IC4_Module->frequency = (double) 1.0 / secondsPerPeriod;
 }
@@ -315,6 +371,11 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC5Interrupt(void)
 void IC5_Initialize(void)
 {
     IC5CON1 = 0x0000;
+    
+    ANSBbits.ANSB9 = 0;
+	TRISBbits.TRISB9 = 1;
+	Nop();
+    
 	//the 8 represents RP8
     RPINR9bits.IC5R = 0b1000;
     
@@ -323,8 +384,13 @@ void IC5_Initialize(void)
         int junk = IC5BUF;
     }
     
+    T1CON = 0b0000000000000000;
+    T1CONbits.TCKPS = 0b10;
+    T1CONbits.TCS = 0b0;
+    T1CONbits.TON = 1;
+    
     IC5CON2bits.SYNCSEL = 0b00000;
-    IC5CON1bits.ICTSEL = 0b111;
+    IC5CON1bits.ICTSEL = 0b100;
     IC5CON1bits.ICI = 0b00;
     IC5CON1bits.ICM = RISING_EDGE_TRIGGER_SETTING;
 	
@@ -340,7 +406,7 @@ void IC5_Update(IC_Module* IC5_Module)
 	
 	IC5_Module->dutyCyclePercentage = ((double) logicHighClockCycles / fullPeriodClockCycles) * 100;
 	
-	double secondsPerPeriod = fullPeriodClockCycles / FCY;
+	double secondsPerPeriod = (double) fullPeriodClockCycles / TIMER_FREQUENCY;
 	
 	IC5_Module->frequency = (double) 1.0 / secondsPerPeriod;
 }
@@ -368,6 +434,10 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC6Interrupt(void)
 void IC6_Initialize(void)
 {
     IC6CON1 = 0x0000;
+    
+	TRISBbits.TRISB11 = 1;
+	Nop();
+    
 	//the 11 represents RP11
     RPINR9bits.IC6R = 0b1011;
     
@@ -375,6 +445,11 @@ void IC6_Initialize(void)
     {
         int junk = IC6BUF;
     }
+    
+    T1CON = 0b0000000000000000;
+    T1CONbits.TCKPS = 0b10;
+    T1CONbits.TCS = 0b0;
+    T1CONbits.TON = 1;
     
     IC6CON2bits.SYNCSEL = 0b00000;
     IC6CON1bits.ICTSEL = 0b111;
@@ -393,7 +468,7 @@ void IC6_Update(IC_Module* IC6_Module)
 	
 	IC6_Module->dutyCyclePercentage = ((double) logicHighClockCycles / fullPeriodClockCycles) * 100;
 	
-	double secondsPerPeriod = fullPeriodClockCycles / FCY;
+	double secondsPerPeriod = (double) fullPeriodClockCycles / TIMER_FREQUENCY;
 	
 	IC6_Module->frequency = (double) 1.0 / secondsPerPeriod;
 }

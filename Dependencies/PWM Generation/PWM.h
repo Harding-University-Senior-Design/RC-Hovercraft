@@ -7,10 +7,6 @@
 // more than once.  
 #pragma once
 
-//aliases for additional layers of abstraction
-#define true 1
-#define false 0
-
 typedef struct PWM_Module PWM_Module;
 
 struct PWM_Module
@@ -28,45 +24,6 @@ struct PWM_Module
     double (*GetFrequency)();
     void (*UpdateFrequency)(const struct PWM_Module*);
 };
-
-//see Table 11-4 in the PIC24FJ128GA202 documentation for more codes
-//for remappable pin settings (starting on page 174)
-//The left motor's maps to OC1
-//The right motor's maps to OC2
-
-//The order of these aliases is as follows:
-//OC_CON1 --    main configuration register for the motor's PWM/OC module
-//OC_CON1bits --    direct access to the CON1 register's bits
-//OC_CON2 --    secondary config register for the motor's PWM/OC module
-//OC_CON2bits --    direct access to the CON2 register's bits
-//RP -- the configuration register for the remappable pin used by the PWM module
-//RP_Reference --   the reference code sent to the remappable pin
-//                              to sync it with a module
-//                              (13 = OC1 for the left motor,
-//                              14 = OC2 for the right motor)
-//OCR --    The register that controls what portion of the period the PWM will
-//          generate a logic high voltage (based on calculations using OCRS)
-//OCRS --   The register that controls the period of the PWM (based on
-//          calculations using the Tcy value)
-//          See Example 15-1 (page 215) for calculation information
-//          Essentially, OCxR / OCxRS = duty cycle % for the PWM module
-#define OC1_RP RPOR0bits.RP0R
-#define OC1_Remappable_Pin_Reference 13
-
-#define OC2_RP RPOR0bits.RP1R
-#define OC2_Remappable_Pin_Reference 14
-
-#define OC3_RP RPOR1bits.RP2R
-#define OC3_Remappable_Pin_Reference 15
-
-#define OC4_RP RPOR1bits.RP3R
-#define OC4_Remappable_Pin_Reference 16
-
-#define OC5_RP RPOR4bits.RP9R
-#define OC5_Remappable_Pin_Reference 17
-
-#define OC6_RP RPOR5bits.RP10R
-#define OC6_Remappable_Pin_Reference 18
 
 //Functions to generate a PWM signal using the OC1 module and the RP0 pin
 void PWM_OC1_Initialize(PWM_Module* OC1_PWM_module);
