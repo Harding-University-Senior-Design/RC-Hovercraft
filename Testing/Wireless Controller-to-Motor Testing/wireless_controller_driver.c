@@ -1,5 +1,5 @@
 /*
- * File:   output_signal_generation_driver.c
+ * File:   wireless_controller_driver.c
  * Author: Zachary Downum
  */
 
@@ -15,6 +15,16 @@
 
 #include "PWM.h"
 #include "InputCapture.h"
+
+//these were experimentally derived, so these may not be the optimal values
+#define MINIMUM_INPUT_SIGNAL_DUTY_CYCLE (double)7.29
+#define MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE (double)13.79
+
+//Setting the INCREMENT_ADJUSTMENT_FACTOR to 100 achieves an output duty cycle that goes from 0% to 100%
+//make the INCREMENT_ADJUSTMENT_FACTOR smaller to make the maximum output duty cycle % smaller
+//make the INCREMENT_ADJUSTMENT_FACTOR larger to make the maximum output duty cycle % larger (not recommended as 100% should be the absolute max)
+#define INCREMENT_ADJUSTMENT_FACTOR 100
+#define OUTPUT_DUTY_CYCLE_INCREMENT ((double)(MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / INCREMENT_ADJUSTMENT_FACTOR)
 
 //basic initialization for all pins
 void PIC_Initialization(void)
@@ -65,11 +75,10 @@ int main(void)
         __delay_ms(2);
         Test_Input.Update(&Test_Input);
         
-		//7.29 is approximately the lowest duty cycle of the signal
-		//0.065 is the ratio of the difference in duty cycle (high - low) / 100, which makes
-		//the output duty cycle 100% when the input signal is at its maximum duty cycle
-        Test_Motor.dutyCyclePercentage = (Test_Input.dutyCyclePercentage - 7.29) / 0.065;
+        Test_Motor.dutyCyclePercentage = (Test_Input.dutyCyclePercentage - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / OUTPUT_DUTY_CYCLE_INCREMENT;
         
+        //This is here to account for minor variations that put the input duty cycle above or below
+        //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
         if (Test_Motor.dutyCyclePercentage < 0)
         {
             Test_Motor.dutyCyclePercentage = 0;
