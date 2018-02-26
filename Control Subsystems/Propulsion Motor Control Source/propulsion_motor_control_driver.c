@@ -66,8 +66,7 @@ int main(void)
 
     PWM_Module left_motor;
 	PWM_Module right_motor;
-    PWM_Module_Initialize(&left_motor);
-	PWM_Module_Initialize(&right_motor);
+    PWM_Module_Initialize(&left_motor, &right_motor);
     
     IC_Module propulsion_motor_thrust_input;
     IC_Module_Initialize(&propulsion_motor_thrust_input);
