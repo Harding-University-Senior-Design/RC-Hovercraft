@@ -23,8 +23,8 @@ void PIC_Initialization(void)
     ANSB = 0b0000000000000000;
     Nop();
 	
-	//changes all Port A pins to input except for RA0 and RA1 (used for motor control)
-	TRISA = 0b1111111111111100;
+	//changes all Port A pins to output (except for RA4, which is an input only pin)
+	TRISA = 0b0000000000000000;
 
     //changes all Port B pins to output (except for RP4, which is an input only pin)
     TRISB = 0b0000000000000000;
@@ -71,7 +71,7 @@ int main(void)
         {
             Test_Motor.duty_cycle_percentage = i;
             Test_Motor.UpdateDutyCycle(&Test_Motor);
-            __delay_ms(60000);
+            __delay_ms(5000);
         }
     }
     
