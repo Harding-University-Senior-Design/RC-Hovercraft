@@ -20,12 +20,6 @@
 #define MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE (double)13.79
 #define MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE (double)((MINIMUM_INPUT_SIGNAL_DUTY_CYCLE + MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE) / 2)
 
-//Setting the INCREMENT_ADJUSTMENT_FACTOR to 100 achieves an output duty cycle that goes from 0% to 100%
-//make the INCREMENT_ADJUSTMENT_FACTOR smaller to make the maximum output duty cycle % smaller
-//make the INCREMENT_ADJUSTMENT_FACTOR larger to make the maximum output duty cycle % larger (not recommended as 100% should be the absolute max)
-#define INCREMENT_ADJUSTMENT_FACTOR 100
-#define OUTPUT_DUTY_CYCLE_INCREMENT ((double)(MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / INCREMENT_ADJUSTMENT_FACTOR)
-
 //basic initialization for all pins
 void PIC_Initialization(void)
 {
@@ -46,7 +40,8 @@ void IC_Module_Initialize(IC_Module* kill_switch_input)
 
 void Kill_Switch_Initialize(void)
 {
-	LATBbits.LATB6 = 0;
+	LATAbits.LATA0 = 1;
+	LATAbits.LATA1 = 1;
 }
 
 int main(void)
@@ -68,11 +63,13 @@ int main(void)
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
         if (kill_switch_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
-            LATBbits.LATB6 = 0;
+            LATAbits.LATA0 = 1;
+            LATAbits.LATA1 = 1;
         }
         else if (kill_switch_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
-            LATBbits.LATB6 = 1;
+            LATAbits.LATA0 = 0;
+            LATAbits.LATA1 = 0;
         }
     }
     
