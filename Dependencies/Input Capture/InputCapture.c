@@ -86,10 +86,13 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC1Interrupt(void)
     IFS0bits.IC1IF = 0;
 }
 
-void IC1_Initialize(void)
-{
+void IC1_Initialize(IC_Module* IC1_Module)
+{   
     //disables the IC1 module while it is configured
     IC1CON1 = 0x0000;
+    
+    IC1_Module->dutyCyclePercentage = 0;
+    IC1_Module->frequency = 0;
     
     //configures pin B4/RP4 as an input (unnecessary in this case, as RPI4
     //is only ever an input pin anyway)
@@ -182,9 +185,12 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC2Interrupt(void)
     IFS0bits.IC2IF = 0;
 }
 
-void IC2_Initialize(void)
+void IC2_Initialize(IC_Module* IC2_Module)
 {
     IC2CON1 = 0x0000;
+    
+    IC2_Module->dutyCyclePercentage = 0;
+    IC2_Module->frequency = 0;
     
 	TRISBbits.TRISB5 = 1;
 	Nop();
@@ -244,9 +250,12 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC3Interrupt(void)
     IFS2bits.IC3IF = 0;
 }
 
-void IC3_Initialize(void)
+void IC3_Initialize(IC_Module* IC3_Module)
 {
     IC3CON1 = 0x0000;
+    
+    IC3_Module->dutyCyclePercentage = 0;
+    IC3_Module->frequency = 0;
     
 	TRISBbits.TRISB6 = 1;
 	Nop();
@@ -306,9 +315,12 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC4Interrupt(void)
     IFS2bits.IC4IF = 0;
 }
 
-void IC4_Initialize(void)
+void IC4_Initialize(IC_Module* IC4_Module)
 {
     IC4CON1 = 0x0000;
+    
+    IC4_Module->dutyCyclePercentage = 0;
+    IC4_Module->frequency = 0;
     
 	TRISBbits.TRISB7 = 1;
 	Nop();
@@ -368,9 +380,12 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC5Interrupt(void)
     IFS2bits.IC5IF = 0;
 }
 
-void IC5_Initialize(void)
+void IC5_Initialize(IC_Module* IC5_Module)
 {
     IC5CON1 = 0x0000;
+    
+    IC5_Module->dutyCyclePercentage = 0;
+    IC5_Module->frequency = 0;
     
     ANSBbits.ANSB9 = 0;
 	TRISBbits.TRISB9 = 1;
@@ -431,9 +446,12 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC6Interrupt(void)
     IFS2bits.IC6IF = 0;
 }
 
-void IC6_Initialize(void)
+void IC6_Initialize(IC_Module* IC6_Module)
 {
     IC6CON1 = 0x0000;
+    
+    IC6_Module->dutyCyclePercentage = 0;
+    IC6_Module->frequency = 0;
     
 	TRISBbits.TRISB11 = 1;
 	Nop();
