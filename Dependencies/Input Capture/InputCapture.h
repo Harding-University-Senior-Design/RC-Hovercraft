@@ -46,7 +46,7 @@ struct IC_Module
 //it must be named IC1Interrupt so it can
 //be recognized as an IC module #1 interrupt
 void __attribute__ ((__interrupt__, auto_psv)) _IC1Interrupt(void);
-void IC1_Initialize(void);
+void IC1_Initialize(IC_Module* IC1_Module);
 void IC1_Update(IC_Module* IC1_Module);
 
 
@@ -55,7 +55,7 @@ void IC1_Update(IC_Module* IC1_Module);
 //it must be named IC2Interrupt so it can
 //be recognized as an IC module #2 interrupt
 void __attribute__ ((__interrupt__, auto_psv)) _IC2Interrupt(void);
-void IC2_Initialize(void);
+void IC2_Initialize(IC_Module* IC2_Module);
 void IC2_Update(IC_Module* IC2_Module);
 
 
@@ -64,7 +64,7 @@ void IC2_Update(IC_Module* IC2_Module);
 //it must be named IC3Interrupt so it can
 //be recognized as an IC module #3 interrupt
 void __attribute__ ((__interrupt__, auto_psv)) _IC3Interrupt(void);
-void IC3_Initialize(void);
+void IC3_Initialize(IC_Module* IC3_Module);
 void IC3_Update(IC_Module* IC3_Module);
 
 
@@ -77,19 +77,19 @@ void IC3_Update(IC_Module* IC3_Module);
 //it must be named IC4Interrupt so it can
 //be recognized as an IC module #4 interrupt
 void __attribute__ ((__interrupt__, auto_psv)) _IC4Interrupt(void);
-void IC4_Initialize(void);
+void IC4_Initialize(IC_Module* IC4_Module);
 void IC4_Update(IC_Module* IC4_Module);
 
 
 //Unused as of now in the hovercraft project, but it is here because
 //the framework should have the potential to use all 6 of the IC modules if necessary
 void __attribute__ ((__interrupt__, auto_psv)) _IC5Interrupt(void);
-void IC5_Initialize(void);
+void IC5_Initialize(IC_Module* IC5_Module);
 void IC5_Update(IC_Module* IC5_Module);
 
 
 //Unused as of now in the hovercraft project, but it is here because
 //the framework should have the potential to use all 6 of the IC modules if necessary
 void __attribute__ ((__interrupt__, auto_psv)) _IC6Interrupt(void);
-void IC6_Initialize(void);
+void IC6_Initialize(IC_Module* IC6_Module);
 void IC6_Update(IC_Module* IC6_Module);
