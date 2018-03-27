@@ -14,6 +14,7 @@
 //(see system_configuration.h)
 #define FCY (_XTAL_FREQ / 2)
 #define TCY ((double)1.0 / FCY)
+#define TIMER_PRESCALER 64
 
 #define PWM_ROUNDING_OFFSET 0.5
 
@@ -78,17 +79,27 @@ void PWM_OC1_Initialize(PWM_Module* OC1_PWM_module)
     
     //sets the default duty cycle percentage to 0 to reflect the register values
     OC1_PWM_module->dutyCyclePercentage = 0;
-    //sets the default period to 15000 (Hz) to reflect the register values
-    OC1_PWM_module->frequency = 15000;
+    //sets the default period to 1000 (Hz) to reflect the register values
+    OC1_PWM_module->frequency = 1000;
     
     OC1_PWM_module->UpdateFrequency(OC1_PWM_module);
     OC1_PWM_module->UpdateDutyCycle(OC1_PWM_module);
     
+    //turns timer1 off to configure it
+    T1CON = 0b0000000000000000;
+    //sets a 1:64 input clock prescaler, which increments the timer every
+    //8th clock cycle (from Fcy by default)
+    T1CONbits.TCKPS = 0b10;
+    //sets this timer's clock source to Fcy
+    T1CONbits.TCS = 0b0;
+    //turns timer1 back on after it is configured
+    T1CONbits.TON = 1;
+    
     //sets itself as the synchronization source
     OC1CON2 = 0b00011111;
     
-    //sets the pwm timer to the peripheral clock (Fcy)
-    OC1CON1bits.OCTSEL = 0b111;
+    //sets the pwm timer to timer1
+    OC1CON1bits.OCTSEL = 0b100;
     
     //turns on edge-aligned pwm functionality
     OC1CON1bits.OCM = 0b110;
@@ -126,7 +137,7 @@ void PWM_Update_OC1_Frequency(const PWM_Module* OC1_PWM_module)
 	//Using the 1 / ((OCRS + 1) * TCY) equation for frequency, we first solved for OCRS
 	//Then we plugged in the new frequency value to calculate the new OCRS value
 	//UpdateDutyCycle is called to recalculate OCR after the new value of OCRS is stored
-    double totalClockCycles = (double)1.0 / (OC1_PWM_module->frequency * TCY) - 1;
+    double totalClockCycles = (double)1.0 / (OC1_PWM_module->frequency * TCY * TIMER_PRESCALER) - 1;
     OC1RS = (int)totalClockCycles;
     
     OC1_PWM_module->UpdateDutyCycle(OC1_PWM_module);

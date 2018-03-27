@@ -21,6 +21,13 @@
 #define MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE (double)13.79
 #define MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE (double)((MINIMUM_INPUT_SIGNAL_DUTY_CYCLE + MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE) / 2)
 
+//Setting the INCREMENT_ADJUSTMENT_FACTOR to 100 achieves an output duty cycle that goes from 0% to 100%
+//make the INCREMENT_ADJUSTMENT_FACTOR smaller to make the maximum output duty cycle % smaller
+//make the INCREMENT_ADJUSTMENT_FACTOR larger to make the maximum output duty cycle % larger (not recommended as 100% should be the absolute max)
+#define INCREMENT_ADJUSTMENT_FACTOR 10
+#define OUTPUT_DUTY_CYCLE_INCREMENT ((double)(MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / INCREMENT_ADJUSTMENT_FACTOR)
+#define PROPULSION_THROTTLE_SERVO_OFFSET 1.8
+
 //basic initialization for all pins
 void PIC_Initialization(void)
 {
@@ -73,23 +80,21 @@ int main(void)
     PWM_Module_Initialize(&propulsion_throttle_servo_output);
 	
     kill_switch_input.Initialize(&kill_switch_input);
-    propulsion_throttle_servo_input.Initialize(&propulsion_throttle_servo_input)
+    propulsion_throttle_servo_input.Initialize(&propulsion_throttle_servo_input);
     
     propulsion_throttle_servo_output.Initialize(&propulsion_throttle_servo_output);
     
-    propulsion_throttle_servo_output.frequency = 62;
+    propulsion_throttle_servo_output.frequency = 50;
     propulsion_throttle_servo_output.dutyCyclePercentage = 2;
     propulsion_throttle_servo_output.UpdateFrequency(&propulsion_throttle_servo_output);
     propulsion_throttle_servo_output.UpdateDutyCycle(&propulsion_throttle_servo_output);
     
     while(true)
     {
-        __delay_ms(2);
         kill_switch_input.Update(&kill_switch_input);
         
         propulsion_throttle_servo_input.Update(&propulsion_throttle_servo_input);
-        propulsion_throttle_servo_output.dutyCyclePercentage = propulsion_throttle_servo_input.dutyCyclePercentage;
-        propulsion_throttle_servo_output.UpdateDutyCycle();
+        propulsion_throttle_servo_output.dutyCyclePercentage = (propulsion_throttle_servo_input.dutyCyclePercentage - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / OUTPUT_DUTY_CYCLE_INCREMENT + PROPULSION_THROTTLE_SERVO_OFFSET;
         
         //This is here to account for minor variations that put the input duty cycle above or below
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
@@ -103,6 +108,19 @@ int main(void)
             LATAbits.LATA0 = 1;
             LATAbits.LATA1 = 1;
         }
+        
+                //This is here to account for minor variations that put the input duty cycle above or below
+        //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
+        if (propulsion_throttle_servo_output.dutyCyclePercentage < 0)
+        {
+            propulsion_throttle_servo_output.dutyCyclePercentage = 0;
+        }
+        else if (propulsion_throttle_servo_output.dutyCyclePercentage > 100)
+        {
+            propulsion_throttle_servo_output.dutyCyclePercentage = 100;
+        }
+        
+        propulsion_throttle_servo_output.UpdateDutyCycle(&propulsion_throttle_servo_output);
     }
     
     return -1;
