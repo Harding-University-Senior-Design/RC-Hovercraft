@@ -23,8 +23,9 @@
 //Setting the INCREMENT_ADJUSTMENT_FACTOR to 100 achieves an output duty cycle that goes from 0% to 100%
 //make the INCREMENT_ADJUSTMENT_FACTOR smaller to make the maximum output duty cycle % smaller
 //make the INCREMENT_ADJUSTMENT_FACTOR larger to make the maximum output duty cycle % larger (not recommended as 100% should be the absolute max)
-#define INCREMENT_ADJUSTMENT_FACTOR 100
-#define OUTPUT_DUTY_CYCLE_INCREMENT ((double)(MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / INCREMENT_ADJUSTMENT_FACTOR)
+//This is now unnecessary, it may be necessary later.  We are just taking the wireless controller inputs and passing them on
+//#define INCREMENT_ADJUSTMENT_FACTOR 100
+//#define OUTPUT_DUTY_CYCLE_INCREMENT ((double)(MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / INCREMENT_ADJUSTMENT_FACTOR)
 
 //basic initialization for all pins
 void PIC_Initialization(void)
@@ -38,25 +39,19 @@ void PIC_Initialization(void)
     Nop();
 }
 
-void PWM_Module_Initialize(PWM_Module* left_motor, PWM_Module* right_motor)
+void PWM_Module_Initialize(PWM_Module* propulsion_thrust_servo_output)
 {
-    left_motor->Initialize = PWM_OC1_Initialize;
-    left_motor->GetDutyCycle = PWM_Get_OC1_DutyCycle;
-    left_motor->GetFrequency = PWM_Get_OC1_Frequency;
-    left_motor->UpdateDutyCycle = PWM_Update_OC1_DutyCycle;
-    left_motor->UpdateFrequency = PWM_Update_OC1_Frequency;
-	
-	right_motor->Initialize = PWM_OC2_Initialize;
-    right_motor->GetDutyCycle = PWM_Get_OC2_DutyCycle;
-    right_motor->GetFrequency = PWM_Get_OC2_Frequency;
-    right_motor->UpdateDutyCycle = PWM_Update_OC2_DutyCycle;
-    right_motor->UpdateFrequency = PWM_Update_OC2_Frequency;
+    propulsion_thrust_servo_output->Initialize = PWM_OC1_Initialize;
+    propulsion_thrust_servo_output->GetDutyCycle = PWM_Get_OC1_DutyCycle;
+    propulsion_thrust_servo_output->GetFrequency = PWM_Get_OC1_Frequency;
+    propulsion_thrust_servo_output->UpdateDutyCycle = PWM_Update_OC1_DutyCycle;
+    propulsion_thrust_servo_output->UpdateFrequency = PWM_Update_OC1_Frequency;
 }
 
-void IC_Module_Initialize(IC_Module* test_input)
+void IC_Module_Initialize(IC_Module* propulsion_thrust_servo_input)
 {
-    test_input->Initialize = IC1_Initialize;
-    test_input->Update = IC1_Update;
+    propulsion_thrust_servo_input->Initialize = IC1_Initialize;
+    propulsion_thrust_servo_input->Update = IC1_Update;
 }
 
 int main(void)
@@ -64,40 +59,36 @@ int main(void)
     SYSTEM_Initialize();
     PIC_Initialization();
 
-    PWM_Module left_motor;
-	PWM_Module right_motor;
-    PWM_Module_Initialize(&left_motor, &right_motor);
+    PWM_Module propulsion_thrust_servo_output;
+    PWM_Module_Initialize(&propulsion_thrust_servo_output);
     
-    IC_Module propulsion_motor_thrust_input;
-    IC_Module_Initialize(&propulsion_motor_thrust_input);
+    IC_Module propulsion_thrust_servo_input;
+    IC_Module_Initialize(&propulsion_thrust_servo_input);
     
-    left_motor.Initialize(&left_motor);
-	right_motor.Initialize(&right_motor);
+    propulsion_thrust_servo_output.Initialize(&left_motor);
 	
-    left_motor.frequency = 15000;
-    right_motor.frequency = 15000;
+    propulsion_thrust_servo_output.frequency = 50;
 	
-	left_motor.UpdateFrequency(&left_motor);
-    right_motor.UpdateFrequency(&right_motor);
+	propulsion_thrust_servo_output.UpdateFrequency(&propulsion_thrust_servo_output);
 	
     propulsion_motor_thrust_input.Initialize();
     
     while(true)
     {
         __delay_ms(2);
-        propulsion_motor_thrust_input.Update(&propulsion_motor_thrust_input);
+        propulsion_thrust_servo_input.Update(&propulsion_motor_thrust_input);
         
-        left_motor.dutyCyclePercentage = (propulsion_motor_thrust_input.dutyCyclePercentage - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / OUTPUT_DUTY_CYCLE_INCREMENT;
+        propulsion_thrust_servo_output.dutyCyclePercentage = propulsion_thrust_servo_input.dutyCyclePercentage;
         
         //This is here to account for minor variations that put the input duty cycle above or below
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
-        if (left_motor.dutyCyclePercentage < 0)
+        if (propulsion_thrust_servo_output.dutyCyclePercentage < 0)
         {
-            left_motor.dutyCyclePercentage = 0;
+            propulsion_thrust_servo_output.dutyCyclePercentage = 0;
         }
-        else if (left_motor.dutyCyclePercentage > 100)
+        else if (propulsion_thrust_servo_output.dutyCyclePercentage >= 99)
         {
-            left_motor.dutyCyclePercentage = 100;
+            propulsion_thrust_servo_output.dutyCyclePercentage = 99;
         }
 		
 		//the left and right motor should have identical values when calculating thrust, so there is no need to do any calculations or adjustments for the other motor
