@@ -42,13 +42,8 @@ void IC_Module_Initialize(IC_Module* kill_switch_input)
 
 void Kill_Switch_Initialize(void)
 {
-<<<<<<< HEAD
 	LATAbits.LATA0 = 0;
 	LATAbits.LATA1 = 0;
-=======
-	LATAbits.LATA0 = 1;
-	LATAbits.LATA1 = 1;
->>>>>>> a81892c549b20db614449c698b14db123eb47b8c
 }
 
 int main(void)
@@ -71,24 +66,13 @@ int main(void)
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
         if (kill_switch_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
-<<<<<<< HEAD
-            LATAbits.LATA0 = 0;
-			LATAbits.LATA1 = 0;
+		LATAbits.LATA0 = 0;
+		LATAbits.LATA1 = 0;
         }
         else if (kill_switch_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
-            LATAbits.LATA0 = 1;
-			LATAbits.LATA1 = 1;
-=======
-            LATAbits.LATA0 = 1;
-            LATAbits.LATA1 = 1;
-        }
-        else if (kill_switch_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
-        {
-            LATAbits.LATA0 = 0;
-            LATAbits.LATA1 = 0;
->>>>>>> a81892c549b20db614449c698b14db123eb47b8c
-        }
+		LATAbits.LATA0 = 1;
+		LATAbits.LATA1 = 1;
     }
     
     return -1;
