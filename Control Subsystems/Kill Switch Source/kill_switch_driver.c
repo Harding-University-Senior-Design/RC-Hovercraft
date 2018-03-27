@@ -31,10 +31,12 @@ void PIC_Initialization(void)
 {
     //changes all pins to digital
     ANSB = 0x0000;
+	ANSA = 0x0000;
     Nop();
     
     //changes all pins to output (except for RPI4, which is an input only pin)
     TRISB = 0x0000;
+	TRISA = 0x0000;
     Nop();
 }
 
@@ -46,13 +48,15 @@ void IC_Module_Initialize(IC_Module* kill_switch_input)
 
 void Kill_Switch_Initialize(void)
 {
-	LATBbits.LATB6 = 0;
+	LATAbits.LATA0 = 0;
+	LATAbits.LATA1 = 0;
 }
 
 int main(void)
 {
     SYSTEM_Initialize();
     PIC_Initialization();
+	Kill_Switch_Initialize();
     
     IC_Module kill_switch_input;
     IC_Module_Initialize(&kill_switch_input);
@@ -68,11 +72,13 @@ int main(void)
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
         if (kill_switch_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
-            LATBbits.LATB6 = 0;
+            LATAbits.LATA0 = 0;
+			LATAbits.LATA1 = 0;
         }
         else if (kill_switch_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
-            LATBbits.LATB6 = 1;
+            LATAbits.LATA0 = 1;
+			LATAbits.LATA1 = 1;
         }
     }
     
