@@ -28,6 +28,10 @@
 #define OUTPUT_DUTY_CYCLE_INCREMENT ((double)(MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / INCREMENT_ADJUSTMENT_FACTOR)
 #define PROPULSION_THROTTLE_SERVO_OFFSET 1.8
 
+//this dead zone will be used to prevent the user from turning the propulsion motor without intentionally
+//moving the left joystick to the left or right.
+#define DEAD_ZONE_OFFSET 0.5
+
 //basic initialization for all pins
 void PIC_Initialization(void)
 {
@@ -42,13 +46,16 @@ void PIC_Initialization(void)
     Nop();
 }
 
-void IC_Module_Initialize(IC_Module* kill_switch_input, IC_Module* propulsion_throttle_servo_input)
+void IC_Module_Initialize(IC_Module* kill_switch_input, IC_Module* propulsion_throttle_servo_input, IC_Module* propulsion_direction_motor_input)
 {
     kill_switch_input->Initialize = IC1_Initialize;
     kill_switch_input->Update = IC1_Update;
     
     propulsion_throttle_servo_input->Initialize = IC2_Initialize;
     propulsion_throttle_servo_input->Update = IC2_Update;
+	
+	propulsion_direction_motor_input->Initialize = IC3_Initialize;
+	propulsion_direction_motor_input->Update = IC3_Update;
 }
 
 void PWM_Module_Initialize(PWM_Module* propulsion_thrust_servo_output)
@@ -62,6 +69,7 @@ void PWM_Module_Initialize(PWM_Module* propulsion_thrust_servo_output)
 
 void Kill_Switch_Initialize(void)
 {
+	//A0 and A1 are used to enable/disable the relays to power on the lift and propulsion engines
 	LATAbits.LATA0 = 0;
 	LATAbits.LATA1 = 0;
 }
@@ -74,7 +82,8 @@ int main(void)
     
     IC_Module kill_switch_input;
     IC_Module propulsion_throttle_servo_input;
-    IC_Module_Initialize(&kill_switch_input, &propulsion_throttle_servo_input);
+	IC_Module propulsion_direction_motor_input;
+    IC_Module_Initialize(&kill_switch_input, &propulsion_throttle_servo_input, &propulsion_direction_motor_input);
     
     PWM_Module propulsion_throttle_servo_output;
     PWM_Module_Initialize(&propulsion_throttle_servo_output);
@@ -92,10 +101,12 @@ int main(void)
     while(true)
     {
         kill_switch_input.Update(&kill_switch_input);
-        
+        propulsion_direction_motor_input.Update(&propulsion_direction_motor_input);
+		
         propulsion_throttle_servo_input.Update(&propulsion_throttle_servo_input);
         propulsion_throttle_servo_output.dutyCyclePercentage = (propulsion_throttle_servo_input.dutyCyclePercentage - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / OUTPUT_DUTY_CYCLE_INCREMENT + PROPULSION_THROTTLE_SERVO_OFFSET;
         
+		
         //This is here to account for minor variations that put the input duty cycle above or below
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
         if (kill_switch_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
@@ -108,8 +119,11 @@ int main(void)
             LATAbits.LATA0 = 1;
             LATAbits.LATA1 = 1;
         }
+		
+        propulsion_throttle_servo_output.UpdateDutyCycle(&propulsion_throttle_servo_output);
         
-                //This is here to account for minor variations that put the input duty cycle above or below
+		
+        //This is here to account for minor variations that put the input duty cycle above or below
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
         if (propulsion_throttle_servo_output.dutyCyclePercentage < 0)
         {
@@ -119,8 +133,19 @@ int main(void)
         {
             propulsion_throttle_servo_output.dutyCyclePercentage = 100;
         }
-        
-        propulsion_throttle_servo_output.UpdateDutyCycle(&propulsion_throttle_servo_output);
+		
+		if (propulsion_direction_motor_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE - DEAD_ZONE_OFFSET)
+        {
+			//This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
+            LATAbits.LATA2 = 1;
+			//this is the bit to control the direction of rotation of the stepper motor (CW or CCW)
+			LATAbits.LATA3 = 1;
+        }
+        else if (propulsion_direction_motor_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE + DEAD_ZONE_OFFSET)
+        {
+            LATAbits.LATA0 = 1;
+            LATAbits.LATA1 = 1;
+        }
     }
     
     return -1;
