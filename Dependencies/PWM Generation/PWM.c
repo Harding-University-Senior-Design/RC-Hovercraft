@@ -161,9 +161,19 @@ void PWM_OC2_Initialize(PWM_Module* OC2_PWM_module)
     OC2_PWM_module->UpdateFrequency(OC2_PWM_module);
     OC2_PWM_module->UpdateDutyCycle(OC2_PWM_module);
     
+    //turns timer1 off to configure it
+    T1CON = 0b0000000000000000;
+    //sets a 1:64 input clock prescaler, which increments the timer every
+    //8th clock cycle (from Fcy by default)
+    T1CONbits.TCKPS = 0b10;
+    //sets this timer's clock source to Fcy
+    T1CONbits.TCS = 0b0;
+    //turns timer1 back on after it is configured
+    T1CONbits.TON = 1;
+    
     OC2CON2 = 0b00011111;
     
-    OC2CON1bits.OCTSEL = 0b111;
+    OC2CON1bits.OCTSEL = 0b100;
     
     OC2CON1bits.OCM = 0b110;
 }
@@ -188,7 +198,7 @@ void PWM_Update_OC2_DutyCycle(const PWM_Module* OC2_PWM_module)
 
 void PWM_Update_OC2_Frequency(const PWM_Module* OC2_PWM_module)
 {    
-    double totalClockCycles = (double)1.0 / (OC2_PWM_module->frequency * TCY) - 1;
+    double totalClockCycles = (double)1.0 / (OC2_PWM_module->frequency * TCY * TIMER_PRESCALER) - 1;
     OC2RS = (int)totalClockCycles;
     
     OC2_PWM_module->UpdateDutyCycle(OC2_PWM_module);

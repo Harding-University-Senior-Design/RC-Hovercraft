@@ -30,7 +30,7 @@
 
 //this dead zone will be used to prevent the user from turning the propulsion motor without intentionally
 //moving the left joystick to the left or right.
-#define DEAD_ZONE_OFFSET 0.1
+#define DEAD_ZONE_OFFSET 0.5
 
 //basic initialization for all pins
 void PIC_Initialization(void)
@@ -112,7 +112,7 @@ int main(void)
     propulsion_throttle_servo_output.frequency = 50;
     propulsion_throttle_servo_output.UpdateFrequency(&propulsion_throttle_servo_output);
     
-    turn_propulsion_engine_output.frequency = 20000;
+    turn_propulsion_engine_output.frequency = 400;
     turn_propulsion_engine_output.UpdateFrequency(&turn_propulsion_engine_output);
     
     while(true)
@@ -155,18 +155,16 @@ int main(void)
         }
 		
 		//represents a leftward turn of the propulsion engine
+        //at the moment, the frequency of the PWM signal * the number of counts per trigger = 800 (counts per rotation) * rotations per second
+        //this will allow for smooth movement of the stepper motor
+        //if PWM frequency * counts per trigger > 800 * RPS, then the user input will experience a delay in controlling the stepper motor
+        //if PWM frequency * counts per trigger < 800 * RPS, then the user input will cause jerking in the stepper motor response
         if (propulsion_direction_motor_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE - DEAD_ZONE_OFFSET)
         {
 			//This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
-            LATAbits.LATA2 = 1;
-			//this is the bit to control the direction of rotation of the stepper motor (CW or CCW)
-			//when the signal is high, the motor shaft rotates CCW, which makes the craft rotate to the left
-			LATAbits.LATA3 = 1;
+            LATAbits.LATA2 = 0;
             
-            turn_propulsion_engine_output.dutyCyclePercentage = 50;
-            turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
-            __delay_us(100);
-            turn_propulsion_engine_output.dutyCyclePercentage = 0;
+            turn_propulsion_engine_output.dutyCyclePercentage = 5;
             turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
         }
         //represents a rightward turn of the propulsion engine
@@ -174,22 +172,16 @@ int main(void)
         {
             //This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
             LATAbits.LATA2 = 1;
-			//this is the bit to control the direction of rotation of the stepper motor (CW or CCW)
-			//when the signal is low, the motor shaft rotates CW, which makes the craft rotate to the right
-			LATAbits.LATA3 = 0;
             
-            turn_propulsion_engine_output.dutyCyclePercentage = 50;
-            turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
-            __delay_us(100);
-            turn_propulsion_engine_output.dutyCyclePercentage = 0;
+            turn_propulsion_engine_output.dutyCyclePercentage = 5;
             turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
         }
         //the motor holds its position
         else
         {
-            LATAbits.LATA2 = 1;
-            LATAbits.LATA3 = 0;
-            turn_propulsion_engine_output.dutyCyclePercentage = 0;
+            LATAbits.LATA2 = 0;
+            
+            turn_propulsion_engine_output.dutyCyclePercentage = 100;
             turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
         }
     }
