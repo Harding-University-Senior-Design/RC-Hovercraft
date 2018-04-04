@@ -28,7 +28,7 @@
 IC_Buffer IC1_Buffer;
 IC_Buffer IC2_Buffer;
 IC_Buffer IC3_Buffer;
-IC_Buffer IC4_Buffer;
+Count_Monitor_Buffer IC4_Buffer;
 IC_Buffer IC5_Buffer;
 IC_Buffer IC6_Buffer;
 
@@ -296,31 +296,31 @@ void IC3_Update(IC_Module* IC3_Module)
 }
 
 
-
+//this interrupt will be different because it is tied to monitoring
+//the number of pulses sent to the stepper motor
+//it triggers only on rising edges, counts the number of pulses,
+//and prevents further motion by setting a flag to notify
+//the main process if the stepper is too far to the left or right
+//This flag is updated automatically and usable any time
 void __attribute__ ((__interrupt__, auto_psv)) _IC4Interrupt(void)
 {
-    if (IC4CON1bits.ICM == RISING_EDGE_TRIGGER_SETTING)
+    if (LATAbits.LATA2 == 0)
     {
-        IC4CON1bits.ICM = FALLING_EDGE_TRIGGER_SETTING;
+        IC4_Buffer.numberOfCounts--;
     }
-    else if (IC4CON1bits.ICM == FALLING_EDGE_TRIGGER_SETTING)
+    else
     {
-		IC4_Buffer.priorRisingTime = IC4_Buffer.risingTime;
-        IC4_Buffer.risingTime = IC4BUF;
-        IC4_Buffer.fallingTime = IC4BUF;
-        
-        IC4CON1bits.ICM = RISING_EDGE_TRIGGER_SETTING;
+        IC4_Buffer.numberOfCounts++;
     }
     
     IFS2bits.IC4IF = 0;
 }
 
-void IC4_Initialize(IC_Module* IC4_Module)
+void IC4_Initialize(Count_Monitor* IC4_Module)
 {
     IC4CON1 = 0x0000;
     
-    IC4_Module->dutyCyclePercentage = 0;
-    IC4_Module->frequency = 0;
+    IC4_Module->numberOfCounts = 0;
     
 	TRISBbits.TRISB7 = 1;
 	Nop();
@@ -348,16 +348,9 @@ void IC4_Initialize(IC_Module* IC4_Module)
     IEC2bits.IC4IE = true;
 }
 
-void IC4_Update(IC_Module* IC4_Module)
+void IC4_Update(Count_Monitor* IC4_Module)
 {
-	int logicHighClockCycles = IC4_Buffer.fallingTime - IC4_Buffer.risingTime;
-	int fullPeriodClockCycles = IC4_Buffer.risingTime - IC4_Buffer.priorRisingTime;
 	
-	IC4_Module->dutyCyclePercentage = ((double) logicHighClockCycles / fullPeriodClockCycles) * 100;
-	
-	double secondsPerPeriod = (double) fullPeriodClockCycles / TIMER_FREQUENCY;
-	
-	IC4_Module->frequency = (double) 1.0 / secondsPerPeriod;
 }
 
 
