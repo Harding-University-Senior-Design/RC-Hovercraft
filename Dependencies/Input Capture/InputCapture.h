@@ -6,6 +6,7 @@
 #pragma once
 
 typedef struct IC_Buffer IC_Buffer;
+typedef struct Count_Monitor_Buffer Count_Monitor_Buffer;
 
 struct IC_Buffer
 {
@@ -14,7 +15,13 @@ struct IC_Buffer
 	int fallingTime;
 };
 
+struct Count_Monitor_Buffer
+{
+	int numberOfCounts;
+};
+
 typedef struct IC_Module IC_Module;
+typedef struct Count_Monitor Count_Monitor;
 
 //this struct is designed to store information about
 //pwm-type square wave input signals
@@ -32,6 +39,15 @@ struct IC_Module
 	void (*Update)(struct IC_Module*);
 };
 
+struct Count_Monitor
+{
+	//this variable will hold a reference to the number of counts held by the
+    //stepper motor.  Negative values are CW, positive values are CCW.
+    int numberOfCounts;
+    
+    void (*Initialize)(Count_Monitor*);
+	void (*Update)(Count_Monitor*);
+};
 
 
 //NOTE:  all these modules are intended to be used with
@@ -77,8 +93,8 @@ void IC3_Update(IC_Module* IC3_Module);
 //it must be named IC4Interrupt so it can
 //be recognized as an IC module #4 interrupt
 void __attribute__ ((__interrupt__, auto_psv)) _IC4Interrupt(void);
-void IC4_Initialize(IC_Module* IC4_Module);
-void IC4_Update(IC_Module* IC4_Module);
+void IC4_Initialize(Count_Monitor* IC4_Module);
+void IC4_Update(Count_Monitor* IC4_Module);
 
 
 //Unused as of now in the hovercraft project, but it is here because
