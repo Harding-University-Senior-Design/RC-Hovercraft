@@ -306,9 +306,12 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC4Interrupt(void)
 {
     if (LATAbits.LATA2 == 0)
     {
-        IC4_Buffer.numberOfCounts--;
+        if (IC4_Buffer.numberOfCounts > -200)
+        {
+            IC4_Buffer.numberOfCounts--;
+        }
     }
-    else
+    else if (IC4_Buffer.numberOfCounts < 200)
     {
         IC4_Buffer.numberOfCounts++;
     }
@@ -320,7 +323,11 @@ void IC4_Initialize(Count_Monitor* IC4_Module)
 {
     IC4CON1 = 0x0000;
     
+    IC4_Buffer.numberOfCounts = 0;
+    
     IC4_Module->numberOfCounts = 0;
+    IC4_Module->allowClockwiseMotion = 1;
+    IC4_Module->allowCounterClockwiseMotion = 1;
     
 	TRISBbits.TRISB7 = 1;
 	Nop();
@@ -350,7 +357,23 @@ void IC4_Initialize(Count_Monitor* IC4_Module)
 
 void IC4_Update(Count_Monitor* IC4_Module)
 {
-	
+	IC4_Module->numberOfCounts = IC4_Buffer.numberOfCounts;
+    
+    if (IC4_Buffer.numberOfCounts <= -200)
+    {
+        IC4_Module->allowClockwiseMotion = 0;
+        IC4_Module->allowCounterClockwiseMotion = 1;
+    }
+    else if (IC4_Buffer.numberOfCounts >= 200)
+    {
+        IC4_Module->allowClockwiseMotion = 1;
+        IC4_Module->allowCounterClockwiseMotion = 0;
+    }
+    else
+    {
+        IC4_Module->allowClockwiseMotion = 1;
+        IC4_Module->allowCounterClockwiseMotion = 1;
+    }
 }
 
 

@@ -46,7 +46,7 @@ void PIC_Initialization(void)
     Nop();
 }
 
-void IC_Module_Initialize(IC_Module* kill_switch_input, IC_Module* propulsion_throttle_servo_input, IC_Module* propulsion_direction_motor_input)
+void IC_Module_Initialize(IC_Module* kill_switch_input, IC_Module* propulsion_throttle_servo_input, IC_Module* propulsion_direction_motor_input, Count_Monitor* stepper_motor_counter_input)
 {
     kill_switch_input->Initialize = IC1_Initialize;
     kill_switch_input->Update = IC1_Update;
@@ -56,6 +56,9 @@ void IC_Module_Initialize(IC_Module* kill_switch_input, IC_Module* propulsion_th
 	
 	propulsion_direction_motor_input->Initialize = IC3_Initialize;
 	propulsion_direction_motor_input->Update = IC3_Update;
+    
+    stepper_motor_counter_input->Initialize = IC4_Initialize;
+    stepper_motor_counter_input->Update = IC4_Update;
 }
 
 void PWM_Module_Initialize(PWM_Module* propulsion_thrust_servo_output, PWM_Module* duration_to_turn_propulsion_engine_output)
@@ -96,7 +99,8 @@ int main(void)
     IC_Module kill_switch_input;
     IC_Module propulsion_throttle_servo_input;
 	IC_Module propulsion_direction_motor_input;
-    IC_Module_Initialize(&kill_switch_input, &propulsion_throttle_servo_input, &propulsion_direction_motor_input);
+    Count_Monitor stepper_motor_counter_input;
+    IC_Module_Initialize(&kill_switch_input, &propulsion_throttle_servo_input, &propulsion_direction_motor_input, &stepper_motor_counter_input);
     
     PWM_Module propulsion_throttle_servo_output;
     PWM_Module turn_propulsion_engine_output;
@@ -105,6 +109,7 @@ int main(void)
     kill_switch_input.Initialize(&kill_switch_input);
     propulsion_throttle_servo_input.Initialize(&propulsion_throttle_servo_input);
     propulsion_direction_motor_input.Initialize(&propulsion_direction_motor_input);
+    stepper_motor_counter_input.Initialize(&stepper_motor_counter_input);
     
     propulsion_throttle_servo_output.Initialize(&propulsion_throttle_servo_output);
     turn_propulsion_engine_output.Initialize(&turn_propulsion_engine_output);
@@ -159,28 +164,28 @@ int main(void)
         //this will allow for smooth movement of the stepper motor
         //if PWM frequency * counts per trigger > 800 * RPS, then the user input will experience a delay in controlling the stepper motor
         //if PWM frequency * counts per trigger < 800 * RPS, then the user input will cause jerking in the stepper motor response
-        if (propulsion_direction_motor_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE - DEAD_ZONE_OFFSET)
+        stepper_motor_counter_input.Update(&stepper_motor_counter_input);
+        if (propulsion_direction_motor_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE - DEAD_ZONE_OFFSET && stepper_motor_counter_input.allowClockwiseMotion == 1)
         {
 			//This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
             LATAbits.LATA2 = 0;
             
-            turn_propulsion_engine_output.dutyCyclePercentage = 5;
+            turn_propulsion_engine_output.dutyCyclePercentage = 10;
             turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
         }
         //represents a rightward turn of the propulsion engine
-        else if (propulsion_direction_motor_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE + DEAD_ZONE_OFFSET)
+        
+        else if (propulsion_direction_motor_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE + DEAD_ZONE_OFFSET && stepper_motor_counter_input.allowCounterClockwiseMotion == 1)
         {
             //This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
             LATAbits.LATA2 = 1;
             
-            turn_propulsion_engine_output.dutyCyclePercentage = 5;
+            turn_propulsion_engine_output.dutyCyclePercentage = 10;
             turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
         }
         //the motor holds its position
         else
         {
-            LATAbits.LATA2 = 0;
-            
             turn_propulsion_engine_output.dutyCyclePercentage = 100;
             turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
         }

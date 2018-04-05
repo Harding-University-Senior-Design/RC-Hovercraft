@@ -45,6 +45,11 @@ struct Count_Monitor
     //stepper motor.  Negative values are CW, positive values are CCW.
     int numberOfCounts;
     
+    int allowClockwiseMotion;
+    int allowCounterClockwiseMotion;
+    
+    int brakeEngaged;
+    
     void (*Initialize)(Count_Monitor*);
 	void (*Update)(Count_Monitor*);
 };
