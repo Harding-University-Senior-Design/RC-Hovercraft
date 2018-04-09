@@ -21,16 +21,25 @@
 #define MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE (double)13.79
 #define MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE (double)((MINIMUM_INPUT_SIGNAL_DUTY_CYCLE + MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE) / 2)
 
+#define STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE (double)7.39
+#define STEERING_MAX_INPUT_SIGNAL_DUTY_CYCLE (double)13.89
+#define STEERING_MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE (double)((MINIMUM_INPUT_SIGNAL_DUTY_CYCLE + MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE) / 2)
+
 //Setting the INCREMENT_ADJUSTMENT_FACTOR to 100 achieves an output duty cycle that goes from 0% to 100%
 //make the INCREMENT_ADJUSTMENT_FACTOR smaller to make the maximum output duty cycle % smaller
 //make the INCREMENT_ADJUSTMENT_FACTOR larger to make the maximum output duty cycle % larger (not recommended as 100% should be the absolute max)
-#define INCREMENT_ADJUSTMENT_FACTOR 10
-#define OUTPUT_DUTY_CYCLE_INCREMENT ((double)(MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / INCREMENT_ADJUSTMENT_FACTOR)
+#define THROTTLE_INCREMENT_ADJUSTMENT_FACTOR 10
+#define PROPULSION_THROTTLE_CYCLE_INCREMENT ((double)(MAXIMUM_INPUT_SIGNAL_DUTY_CYCLE - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / THROTTLE_INCREMENT_ADJUSTMENT_FACTOR)
 #define PROPULSION_THROTTLE_SERVO_OFFSET 1.8
+
+#define STEERING_INCREMENT_ADJUSTMENT_FACTOR 100
+#define PROPULSION_STEERING_CYCLE_INCREMENT ((double)(STEERING_MAX_INPUT_SIGNAL_DUTY_CYCLE - STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE) / STEERING_INCREMENT_ADJUSTMENT_FACTOR)
 
 //this dead zone will be used to prevent the user from turning the propulsion motor without intentionally
 //moving the left joystick to the left or right.
-#define DEAD_ZONE_OFFSET 0.5
+#define DEAD_ZONE_OFFSET 10
+
+#define ROUNDING_OFFSET 0.5
 
 //basic initialization for all pins
 void PIC_Initialization(void)
@@ -92,6 +101,9 @@ void Update_All_Inputs(IC_Module* kill_switch_input, IC_Module* propulsion_throt
 
 int main(void)
 {
+	double currentPropulsionThrottleDutyCycle = MINIMUM_INPUT_SIGNAL_DUTY_CYCLE;
+	double currentPropulsionSteeringDutyCycle = STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE;
+	
     SYSTEM_Initialize();
     PIC_Initialization();
 	Kill_Switch_Initialize();
@@ -119,15 +131,22 @@ int main(void)
     
     turn_propulsion_engine_output.frequency = 400;
     turn_propulsion_engine_output.UpdateFrequency(&turn_propulsion_engine_output);
+    turn_propulsion_engine_output.dutyCyclePercentage = 100;
+    turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
+    __delay_ms(100);
     
     while(true)
     {
-        Update_All_Inputs(&kill_switch_input, &propulsion_throttle_servo_input, &propulsion_direction_motor_input);
+		kill_switch_input->Update(kill_switch_input);
+		propulsion_direction_motor_input->Update(propulsion_direction_motor_input);
+		currentPropulsionSteeringDutyCycle = (currentPropulsionSteeringDutyCycle + propulsion_direction_motor_input.dutyCyclePercentage) / 2;
+		propulsion_throttle_servo_input->Update(propulsion_throttle_servo_input);
+		currentPropulsionThrottleDutyCycle = (currentPropulsionThrottleDutyCycle + propulsion_throttle_servo_input.dutyCyclePercentage) / 2;
 		
         //this is to regulate the duty cycle that is sent to the servo so that it falls within the acceptable range for
         //the servo that is being used by the project.
         //this duty cycle should be approximately between 5% and 15% (with 10% being directly in the center, or 90 degrees of motion in a 180 degree servo)
-        propulsion_throttle_servo_output.dutyCyclePercentage = (propulsion_throttle_servo_input.dutyCyclePercentage - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / OUTPUT_DUTY_CYCLE_INCREMENT + PROPULSION_THROTTLE_SERVO_OFFSET;
+        propulsion_throttle_servo_output.dutyCyclePercentage = (currentPropulsionThrottleDutyCycle - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / PROPULSION_THROTTLE_CYCLE_INCREMENT + PROPULSION_THROTTLE_SERVO_OFFSET;
         
         //This is here to account for minor variations that put the input duty cycle above or below
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
@@ -164,30 +183,75 @@ int main(void)
         //this will allow for smooth movement of the stepper motor
         //if PWM frequency * counts per trigger > 800 * RPS, then the user input will experience a delay in controlling the stepper motor
         //if PWM frequency * counts per trigger < 800 * RPS, then the user input will cause jerking in the stepper motor response
-        stepper_motor_counter_input.Update(&stepper_motor_counter_input);
-        if (propulsion_direction_motor_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE - DEAD_ZONE_OFFSET && stepper_motor_counter_input.allowClockwiseMotion == 1)
+        double preciseLocation = (currentPropulsionSteeringDutyCycle - STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE) / PROPULSION_STEERING_CYCLE_INCREMENT;
+        //changes the values of preciseLocation from 0-100 to a -200 to 200 scale
+        preciseLocation = (preciseLocation - 50) * 4.6;
+        int discreteLocation = 0;
+		//this sets discrete values instead of a continuum.  It helps with the counting of the PWM
+        if (preciseLocation >= 0)
         {
-			//This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
-            LATAbits.LATA2 = 0;
+            discreteLocation = (int)((preciseLocation - 5) / 10) * 10;
             
-            turn_propulsion_engine_output.dutyCyclePercentage = 10;
-            turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
+            while (discreteLocation % 10 != 0)
+            {
+                ++discreteLocation;
+            }
+            ++discreteLocation;
         }
-        //represents a rightward turn of the propulsion engine
-        
-        else if (propulsion_direction_motor_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE + DEAD_ZONE_OFFSET && stepper_motor_counter_input.allowCounterClockwiseMotion == 1)
-        {
-            //This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
-            LATAbits.LATA2 = 1;
-            
-            turn_propulsion_engine_output.dutyCyclePercentage = 10;
-            turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
-        }
-        //the motor holds its position
         else
         {
-            turn_propulsion_engine_output.dutyCyclePercentage = 100;
-            turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
+            discreteLocation = (int)((preciseLocation + 5) / 10) * 10;
+            while (discreteLocation % 10 != 0)
+            {
+                --discreteLocation;
+            }
+            --discreteLocation;
+        }
+        
+        if (discreteLocation >= -15 && discreteLocation <= 15)
+        {
+            discreteLocation = 0;
+        }
+        //these are made 201 so that when they are averaged out with the current numberOfCounts, it will eventually reach 200 and -200
+        else if (discreteLocation > 201)
+        {
+            discreteLocation = 201;
+        }
+        else if (discreteLocation < -201)
+        {
+            discreteLocation = -201;
+        }
+        
+        int desiredLocation = ((double)discreteLocation + stepper_motor_counter_input.numberOfCounts) / 2;
+        
+        while (desiredLocation != stepper_motor_counter_input.numberOfCounts)
+        {
+            stepper_motor_counter_input.Update(&stepper_motor_counter_input);
+            desiredLocation = ((double)discreteLocation + stepper_motor_counter_input.numberOfCounts) / 2;
+
+            if (stepper_motor_counter_input.numberOfCounts > desiredLocation && stepper_motor_counter_input.allowClockwiseMotion == 1)
+            {
+                //This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
+                LATAbits.LATA2 = 0;
+
+                turn_propulsion_engine_output.dutyCyclePercentage = 20;
+                turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
+            }
+            //represents a rightward turn of the propulsion engine
+            else if (stepper_motor_counter_input.numberOfCounts < desiredLocation && stepper_motor_counter_input.allowCounterClockwiseMotion == 1)
+            {
+                //This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
+                LATAbits.LATA2 = 1;
+
+                turn_propulsion_engine_output.dutyCyclePercentage = 20;
+                turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
+            }
+            //the motor holds its position
+            else
+            {
+                turn_propulsion_engine_output.dutyCyclePercentage = 100;
+                turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
+            }
         }
     }
     
