@@ -55,7 +55,7 @@ void PIC_Initialization(void)
     Nop();
 }
 
-void IC_Module_Initialize(IC_Module* kill_switch_input, IC_Module* propulsion_throttle_servo_input, IC_Module* propulsion_direction_motor_input, Count_Monitor* stepper_motor_counter_input)
+void IC_Module_Initialize(IC_Module* kill_switch_input, IC_Module* propulsion_throttle_servo_input, IC_Module* propulsion_direction_motor_input, IC_Module* propulsion_brake_input, Count_Monitor* stepper_motor_counter_input)
 {
     kill_switch_input->Initialize = IC1_Initialize;
     kill_switch_input->Update = IC1_Update;
@@ -65,9 +65,14 @@ void IC_Module_Initialize(IC_Module* kill_switch_input, IC_Module* propulsion_th
 	
 	propulsion_direction_motor_input->Initialize = IC3_Initialize;
 	propulsion_direction_motor_input->Update = IC3_Update;
+	
+	propulsion_brake_input->Initialize = IC5_Initialize;
+	propulsion_brake_input->Update = IC5_Update;
     
     stepper_motor_counter_input->Initialize = IC4_Initialize;
     stepper_motor_counter_input->Update = IC4_Update;
+	
+	
 }
 
 void PWM_Module_Initialize(PWM_Module* propulsion_thrust_servo_output, PWM_Module* duration_to_turn_propulsion_engine_output)
@@ -111,8 +116,9 @@ int main(void)
     IC_Module kill_switch_input;
     IC_Module propulsion_throttle_servo_input;
 	IC_Module propulsion_direction_motor_input;
+	IC_Module propulsion_brake_input;
     Count_Monitor stepper_motor_counter_input;
-    IC_Module_Initialize(&kill_switch_input, &propulsion_throttle_servo_input, &propulsion_direction_motor_input, &stepper_motor_counter_input);
+    IC_Module_Initialize(&kill_switch_input, &propulsion_throttle_servo_input, &propulsion_direction_motor_input, &propulsion_brake_input, &stepper_motor_counter_input);
     
     PWM_Module propulsion_throttle_servo_output;
     PWM_Module turn_propulsion_engine_output;
@@ -121,6 +127,7 @@ int main(void)
     kill_switch_input.Initialize(&kill_switch_input);
     propulsion_throttle_servo_input.Initialize(&propulsion_throttle_servo_input);
     propulsion_direction_motor_input.Initialize(&propulsion_direction_motor_input);
+	propulsion_brake_input.Initialize(&propulsion_brake_input);
     stepper_motor_counter_input.Initialize(&stepper_motor_counter_input);
     
     propulsion_throttle_servo_output.Initialize(&propulsion_throttle_servo_output);
@@ -178,48 +185,65 @@ int main(void)
             LATAbits.LATA1 = 1;
         }
 		
-		//represents a leftward turn of the propulsion engine
-        //at the moment, the frequency of the PWM signal * the number of counts per trigger = 800 (counts per rotation) * rotations per second
-        //this will allow for smooth movement of the stepper motor
-        //if PWM frequency * counts per trigger > 800 * RPS, then the user input will experience a delay in controlling the stepper motor
-        //if PWM frequency * counts per trigger < 800 * RPS, then the user input will cause jerking in the stepper motor response
-        double preciseLocation = (currentPropulsionSteeringDutyCycle - STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE) / PROPULSION_STEERING_CYCLE_INCREMENT;
-        //changes the values of preciseLocation from 0-100 to a -200 to 200 scale
-        preciseLocation = (preciseLocation - 50) * 4.6;
-        int discreteLocation = 0;
-		//this sets discrete values instead of a continuum.  It helps with the counting of the PWM
-        if (preciseLocation >= 0)
+		
+		propulsion_brake_input.Update(&propulsion_brake_input);
+		
+        if (propulsion_brake_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
-            discreteLocation = (int)((preciseLocation - 5) / 10) * 10;
-            
-            while (discreteLocation % 10 != 0)
-            {
-                ++discreteLocation;
-            }
-            ++discreteLocation;
+			//represents a leftward turn of the propulsion engine
+			//at the moment, the frequency of the PWM signal * the number of counts per trigger = 800 (counts per rotation) * rotations per second
+			//this will allow for smooth movement of the stepper motor
+			//if PWM frequency * counts per trigger > 800 * RPS, then the user input will experience a delay in controlling the stepper motor
+			//if PWM frequency * counts per trigger < 800 * RPS, then the user input will cause jerking in the stepper motor response
+			double preciseLocation = (currentPropulsionSteeringDutyCycle - STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE) / PROPULSION_STEERING_CYCLE_INCREMENT;
+			//changes the values of preciseLocation from 0-100 to a -200 to 200 scale with a dead zone on either end of the controller
+			preciseLocation = (preciseLocation - 50) * 4.6;
+			int discreteLocation = 0;
+			//this sets discrete values instead of a continuum.  It helps with the counting of the PWM
+			if (preciseLocation >= 0)
+			{
+				discreteLocation = (int)((preciseLocation - 5) / 10) * 10;
+				
+				while (discreteLocation % 10 != 0)
+				{
+					++discreteLocation;
+				}
+				++discreteLocation;
+			}
+			else
+			{
+				discreteLocation = (int)((preciseLocation + 5) / 10) * 10;
+				while (discreteLocation % 10 != 0)
+				{
+					--discreteLocation;
+				}
+				--discreteLocation;
+			}
+			
+			if (discreteLocation >= -15 && discreteLocation <= 15)
+			{
+				discreteLocation = 0;
+			}
+			//these are made 201 so that when they are averaged out with the current numberOfCounts, it will eventually reach 200 and -200
+			else if (discreteLocation > 201)
+			{
+				discreteLocation = 201;
+			}
+			else if (discreteLocation < -201)
+			{
+				discreteLocation = -201;
+			}
         }
-        else
+        else if (propulsion_brake_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
-            discreteLocation = (int)((preciseLocation + 5) / 10) * 10;
-            while (discreteLocation % 10 != 0)
-            {
-                --discreteLocation;
-            }
-            --discreteLocation;
-        }
-        
-        if (discreteLocation >= -15 && discreteLocation <= 15)
-        {
-            discreteLocation = 0;
-        }
-        //these are made 201 so that when they are averaged out with the current numberOfCounts, it will eventually reach 200 and -200
-        else if (discreteLocation > 201)
-        {
-            discreteLocation = 201;
-        }
-        else if (discreteLocation < -201)
-        {
-            discreteLocation = -201;
+			if (stepper_motor_counter_input.numberOfCounts >= 0)
+			{
+				discreteLocation = 801;
+			}
+			else if (stepper_motor_counter_input.numberOfCounts < 0)
+			{
+				discreteLocation = -801
+			}
         }
         
         int desiredLocation = ((double)discreteLocation + stepper_motor_counter_input.numberOfCounts) / 2;
