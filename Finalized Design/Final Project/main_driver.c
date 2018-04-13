@@ -97,17 +97,10 @@ void Kill_Switch_Initialize(void)
 	LATAbits.LATA1 = 0;
 }
 
-void Update_All_Inputs(IC_Module* kill_switch_input, IC_Module* propulsion_throttle_servo_input, IC_Module* propulsion_direction_motor_input)
-{
-    kill_switch_input->Update(kill_switch_input);
-    propulsion_direction_motor_input->Update(propulsion_direction_motor_input);
-    propulsion_throttle_servo_input->Update(propulsion_throttle_servo_input);
-}
-
 int main(void)
 {
 	double currentPropulsionThrottleDutyCycle = MINIMUM_INPUT_SIGNAL_DUTY_CYCLE;
-	double currentPropulsionSteeringDutyCycle = STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE;
+	double currentPropulsionSteeringDutyCycle = STEERING_MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE;
 	
     SYSTEM_Initialize();
     PIC_Initialization();
@@ -140,16 +133,21 @@ int main(void)
     turn_propulsion_engine_output.UpdateFrequency(&turn_propulsion_engine_output);
     turn_propulsion_engine_output.dutyCyclePercentage = 100;
     turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
-    __delay_ms(100);
+    __delay_ms(1000);
     
     while(true)
     {
-		kill_switch_input->Update(kill_switch_input);
-		propulsion_direction_motor_input->Update(propulsion_direction_motor_input);
-		currentPropulsionSteeringDutyCycle = (currentPropulsionSteeringDutyCycle + propulsion_direction_motor_input.dutyCyclePercentage) / 2;
-		propulsion_throttle_servo_input->Update(propulsion_throttle_servo_input);
+		kill_switch_input.Update(&kill_switch_input);
+		propulsion_direction_motor_input.Update(&propulsion_direction_motor_input);
+		currentPropulsionSteeringDutyCycle = (50 * currentPropulsionSteeringDutyCycle + propulsion_direction_motor_input.dutyCyclePercentage) / 51;
+		propulsion_throttle_servo_input.Update(&propulsion_throttle_servo_input);
 		currentPropulsionThrottleDutyCycle = (currentPropulsionThrottleDutyCycle + propulsion_throttle_servo_input.dutyCyclePercentage) / 2;
 		
+        if (currentPropulsionSteeringDutyCycle > STEERING_MAX_INPUT_SIGNAL_DUTY_CYCLE)
+        {
+            currentPropulsionSteeringDutyCycle = STEERING_MAX_INPUT_SIGNAL_DUTY_CYCLE;
+        }
+        
         //this is to regulate the duty cycle that is sent to the servo so that it falls within the acceptable range for
         //the servo that is being used by the project.
         //this duty cycle should be approximately between 5% and 15% (with 10% being directly in the center, or 90 degrees of motion in a 180 degree servo)
@@ -188,6 +186,8 @@ int main(void)
 		
 		propulsion_brake_input.Update(&propulsion_brake_input);
 		
+        
+		int discreteLocation = 0;
         if (propulsion_brake_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
 			//represents a leftward turn of the propulsion engine
@@ -198,27 +198,9 @@ int main(void)
 			double preciseLocation = (currentPropulsionSteeringDutyCycle - STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE) / PROPULSION_STEERING_CYCLE_INCREMENT;
 			//changes the values of preciseLocation from 0-100 to a -200 to 200 scale with a dead zone on either end of the controller
 			preciseLocation = (preciseLocation - 50) * 4.6;
-			int discreteLocation = 0;
-			//this sets discrete values instead of a continuum.  It helps with the counting of the PWM
-			if (preciseLocation >= 0)
-			{
-				discreteLocation = (int)((preciseLocation - 5) / 10) * 10;
-				
-				while (discreteLocation % 10 != 0)
-				{
-					++discreteLocation;
-				}
-				++discreteLocation;
-			}
-			else
-			{
-				discreteLocation = (int)((preciseLocation + 5) / 10) * 10;
-				while (discreteLocation % 10 != 0)
-				{
-					--discreteLocation;
-				}
-				--discreteLocation;
-			}
+            
+
+            discreteLocation = (int)(preciseLocation);
 			
 			if (discreteLocation >= -15 && discreteLocation <= 15)
 			{
@@ -238,11 +220,11 @@ int main(void)
         {
 			if (stepper_motor_counter_input.numberOfCounts >= 0)
 			{
-				discreteLocation = 801;
+				discreteLocation = 401;
 			}
 			else if (stepper_motor_counter_input.numberOfCounts < 0)
 			{
-				discreteLocation = -801
+				discreteLocation = -401;
 			}
         }
         

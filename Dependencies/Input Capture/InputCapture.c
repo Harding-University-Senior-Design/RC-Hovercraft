@@ -19,6 +19,9 @@
 #define RISING_EDGE_TRIGGER_SETTING 0b011
 #define FALLING_EDGE_TRIGGER_SETTING 0b010
 
+#define ABSOLUTE_MIN_COUNTS -400
+#define ABSOLUTE_MAX_COUNTS 400
+
 
 //this buffer will be used by the interrupt to store values used to
 //calculate duty cycle % and frequency.
@@ -306,14 +309,14 @@ void __attribute__ ((__interrupt__, auto_psv)) _IC4Interrupt(void)
 {
     if (LATAbits.LATA2 == 0)
     {
-        if (IC4_Buffer.numberOfCounts > -800)
+        if (IC4_Buffer.numberOfCounts > ABSOLUTE_MIN_COUNTS)
         {
-            IC4_Buffer.numberOfCounts--;
+            --IC4_Buffer.numberOfCounts;
         }
     }
-    else if (IC4_Buffer.numberOfCounts < 800)
+    else if (IC4_Buffer.numberOfCounts < ABSOLUTE_MAX_COUNTS)
     {
-        IC4_Buffer.numberOfCounts++;
+        ++IC4_Buffer.numberOfCounts;
     }
     
     IFS2bits.IC4IF = 0;
@@ -326,6 +329,7 @@ void IC4_Initialize(Count_Monitor* IC4_Module)
     IC4_Buffer.numberOfCounts = 0;
     
     IC4_Module->numberOfCounts = 0;
+    IC4_Module->desiredPosition = 0;
     IC4_Module->allowClockwiseMotion = 1;
     IC4_Module->allowCounterClockwiseMotion = 1;
     
@@ -348,7 +352,7 @@ void IC4_Initialize(Count_Monitor* IC4_Module)
     IC4CON2bits.SYNCSEL = 0b00000;
     IC4CON1bits.ICTSEL = 0b100;
     IC4CON1bits.ICI = 0b00;
-    IC4CON1bits.ICM = RISING_EDGE_TRIGGER_SETTING;
+    IC4CON1bits.ICM = FALLING_EDGE_TRIGGER_SETTING;
 	
     IPC9bits.IC4IP = 1;
     IFS2bits.IC4IF = false;
@@ -359,12 +363,12 @@ void IC4_Update(Count_Monitor* IC4_Module)
 {
 	IC4_Module->numberOfCounts = IC4_Buffer.numberOfCounts;
     
-    if (IC4_Buffer.numberOfCounts <= -800)
+    if (IC4_Buffer.numberOfCounts <= ABSOLUTE_MIN_COUNTS)
     {
         IC4_Module->allowClockwiseMotion = 0;
         IC4_Module->allowCounterClockwiseMotion = 1;
     }
-    else if (IC4_Buffer.numberOfCounts >= 800)
+    else if (IC4_Buffer.numberOfCounts >= ABSOLUTE_MAX_COUNTS)
     {
         IC4_Module->allowClockwiseMotion = 1;
         IC4_Module->allowCounterClockwiseMotion = 0;
@@ -403,8 +407,7 @@ void IC5_Initialize(IC_Module* IC5_Module)
     IC5_Module->dutyCyclePercentage = 0;
     IC5_Module->frequency = 0;
     
-    ANSBbits.ANSB9 = 0;
-	TRISBbits.TRISB9 = 1;
+	TRISBbits.TRISB8 = 1;
 	Nop();
     
 	//the 8 represents RP8
