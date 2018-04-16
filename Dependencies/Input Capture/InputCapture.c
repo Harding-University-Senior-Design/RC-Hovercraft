@@ -19,8 +19,8 @@
 #define RISING_EDGE_TRIGGER_SETTING 0b011
 #define FALLING_EDGE_TRIGGER_SETTING 0b010
 
-#define ABSOLUTE_MIN_COUNTS -1412
-#define ABSOLUTE_MAX_COUNTS 1412
+#define ABSOLUTE_MIN_COUNTS -400
+#define ABSOLUTE_MAX_COUNTS 400
 
 
 //this buffer will be used by the interrupt to store values used to

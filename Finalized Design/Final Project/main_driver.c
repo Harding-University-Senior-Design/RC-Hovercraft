@@ -41,9 +41,6 @@
 
 #define ROUNDING_OFFSET 0.5
 
-#define StepsForNinetyDegreeTurn 706
-#define StepsForOneEightyDegreeTurn 1412
-
 //basic initialization for all pins
 void PIC_Initialization(void)
 {
@@ -132,11 +129,11 @@ int main(void)
     propulsion_throttle_servo_output.frequency = 50;
     propulsion_throttle_servo_output.UpdateFrequency(&propulsion_throttle_servo_output);
     
-    turn_propulsion_engine_output.frequency = 800;
+    turn_propulsion_engine_output.frequency = 400;
     turn_propulsion_engine_output.UpdateFrequency(&turn_propulsion_engine_output);
     turn_propulsion_engine_output.dutyCyclePercentage = 100;
     turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
-    __delay_ms(5000);
+    __delay_ms(1000);
     
     while(true)
     {
@@ -144,7 +141,7 @@ int main(void)
 		propulsion_direction_motor_input.Update(&propulsion_direction_motor_input);
 		currentPropulsionSteeringDutyCycle = (50 * currentPropulsionSteeringDutyCycle + propulsion_direction_motor_input.dutyCyclePercentage) / 51;
 		propulsion_throttle_servo_input.Update(&propulsion_throttle_servo_input);
-		currentPropulsionThrottleDutyCycle = (50 * currentPropulsionThrottleDutyCycle + propulsion_throttle_servo_input.dutyCyclePercentage) / 51;
+		currentPropulsionThrottleDutyCycle = (currentPropulsionThrottleDutyCycle + propulsion_throttle_servo_input.dutyCyclePercentage) / 2;
 		
         if (currentPropulsionSteeringDutyCycle > STEERING_MAX_INPUT_SIGNAL_DUTY_CYCLE)
         {
@@ -175,12 +172,12 @@ int main(void)
         //This is here to account for minor variations that put the input duty cycle above or below
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
         //this is a binary interpretation of an input signal that could have multiple values, treating it like the switch it represents
-        if (kill_switch_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE + ROUNDING_OFFSET)
+        if (kill_switch_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
             LATAbits.LATA0 = 0;
             LATAbits.LATA1 = 0;
         }
-        else if (kill_switch_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE + ROUNDING_OFFSET)
+        else if (kill_switch_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
             LATAbits.LATA0 = 1;
             LATAbits.LATA1 = 1;
@@ -189,7 +186,9 @@ int main(void)
 		
 		propulsion_brake_input.Update(&propulsion_brake_input);
 		
-        if (propulsion_brake_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE + ROUNDING_OFFSET)
+        
+		int discreteLocation = 0;
+        if (propulsion_brake_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
 			//represents a leftward turn of the propulsion engine
 			//at the moment, the frequency of the PWM signal * the number of counts per trigger = 800 (counts per rotation) * rotations per second
@@ -203,53 +202,56 @@ int main(void)
 
             discreteLocation = (int)(preciseLocation);
 			
-			if (discreteLocation >= -20 && discreteLocation <= 20)
+			if (discreteLocation >= -15 && discreteLocation <= 15)
 			{
 				discreteLocation = 0;
 			}
 			//these are made 201 so that when they are averaged out with the current numberOfCounts, it will eventually reach 200 and -200
-			else if (discreteLocation > StepsForNinetyDegreeTurn)
+			else if (discreteLocation > 201)
 			{
-				discreteLocation = StepsForNinetyDegreeTurn;
+				discreteLocation = 201;
 			}
-			else if (discreteLocation < -StepsForNinetyDegreeTurn)
+			else if (discreteLocation < -201)
 			{
-				discreteLocation = -StepsForNinetyDegreeTurn;
+				discreteLocation = -201;
 			}
         }
-        else if (propulsion_brake_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE + ROUNDING_OFFSET)
+        else if (propulsion_brake_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
 			if (stepper_motor_counter_input.numberOfCounts >= 0)
 			{
-				discreteLocation = StepsForOneEightyDegreeTurn;
+				discreteLocation = 401;
 			}
 			else if (stepper_motor_counter_input.numberOfCounts < 0)
 			{
-				discreteLocation = -StepsForOneEightyDegreeTurn;
+				discreteLocation = -401;
 			}
         }
         
-        while (discreteLocation != stepper_motor_counter_input.numberOfCounts)
+        int desiredLocation = ((double)discreteLocation + stepper_motor_counter_input.numberOfCounts) / 2;
+        
+        while (desiredLocation != stepper_motor_counter_input.numberOfCounts)
         {
             stepper_motor_counter_input.Update(&stepper_motor_counter_input);
+            desiredLocation = ((double)discreteLocation + stepper_motor_counter_input.numberOfCounts) / 2;
 
-            if (stepper_motor_counter_input.numberOfCounts > discreteLocation && stepper_motor_counter_input.allowClockwiseMotion == 1)
+            if (stepper_motor_counter_input.numberOfCounts > desiredLocation && stepper_motor_counter_input.allowClockwiseMotion == 1)
             {
                 //This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
                 LATAbits.LATA2 = 0;
+
+                turn_propulsion_engine_output.dutyCyclePercentage = 20;
+                turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
             }
             //represents a rightward turn of the propulsion engine
-            else if (stepper_motor_counter_input.numberOfCounts < discreteLocation && stepper_motor_counter_input.allowCounterClockwiseMotion == 1)
+            else if (stepper_motor_counter_input.numberOfCounts < desiredLocation && stepper_motor_counter_input.allowCounterClockwiseMotion == 1)
             {
                 //This is the enable bit for the stepper motor responsible for turning the propulsion engine to control direction
                 LATAbits.LATA2 = 1;
-            }
-			
-			if (turn_propulsion_engine_output.dutyCyclePercentage != 20 && stepper_motor_counter_input.numberOfCounts != discreteLocation && (stepper_motor_counter_input.allowClockwiseMotion == 1 || stepper_motor_counter_input.allowCounterClockwiseMotion == 1))
-			{
-				turn_propulsion_engine_output.dutyCyclePercentage = 20;
+
+                turn_propulsion_engine_output.dutyCyclePercentage = 20;
                 turn_propulsion_engine_output.UpdateDutyCycle(&turn_propulsion_engine_output);
-			}
+            }
             //the motor holds its position
             else
             {
