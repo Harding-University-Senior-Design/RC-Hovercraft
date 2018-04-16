@@ -41,6 +41,9 @@
 
 #define ROUNDING_OFFSET 0.5
 
+#define COUNTS_FOR_90_DEGREE_TURN 706
+#define COUNTS_FOR_180_DEGREE_TURN 1412
+
 //basic initialization for all pins
 void PIC_Initialization(void)
 {
@@ -202,29 +205,29 @@ int main(void)
 
             discreteLocation = (int)(preciseLocation);
 			
-			if (discreteLocation >= -15 && discreteLocation <= 15)
+			if (discreteLocation >= -20 && discreteLocation <= 20)
 			{
 				discreteLocation = 0;
 			}
 			//these are made 201 so that when they are averaged out with the current numberOfCounts, it will eventually reach 200 and -200
-			else if (discreteLocation > 201)
+			else if (discreteLocation > COUNTS_FOR_90_DEGREE_TURN + 1)
 			{
-				discreteLocation = 201;
+				discreteLocation = COUNTS_FOR_90_DEGREE_TURN + 1;
 			}
-			else if (discreteLocation < -201)
+			else if (discreteLocation < -COUNTS_FOR_90_DEGREE_TURN - 1)
 			{
-				discreteLocation = -201;
+				discreteLocation = -COUNTS_FOR_90_DEGREE_TURN + 1;
 			}
         }
         else if (propulsion_brake_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
 			if (stepper_motor_counter_input.numberOfCounts >= 0)
 			{
-				discreteLocation = 401;
+				discreteLocation = COUNTS_FOR_180_DEGREE_TURN;
 			}
 			else if (stepper_motor_counter_input.numberOfCounts < 0)
 			{
-				discreteLocation = -401;
+				discreteLocation = -COUNTS_FOR_180_DEGREE_TURN;
 			}
         }
         
