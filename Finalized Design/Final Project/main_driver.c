@@ -102,8 +102,11 @@ void Kill_Switch_Initialize(void)
 
 int main(void)
 {
-	double currentPropulsionThrottleDutyCycle = MINIMUM_INPUT_SIGNAL_DUTY_CYCLE;
-	double currentPropulsionSteeringDutyCycle = STEERING_MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE;
+	double averagedPropulsionThrottleDutyCycle = MINIMUM_INPUT_SIGNAL_DUTY_CYCLE;
+	double averagedPropulsionSteeringDutyCycle = STEERING_MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE;
+    double averagedKillSwitchDutyCycle = MINIMUM_INPUT_SIGNAL_DUTY_CYCLE;
+    double averagedBrakeSwitchDutyCycle = MINIMUM_INPUT_SIGNAL_DUTY_CYCLE;
+    double previousPositionOfPropulsionMotor = 0;
 	
     SYSTEM_Initialize();
     PIC_Initialization();
@@ -141,20 +144,21 @@ int main(void)
     while(true)
     {
 		kill_switch_input.Update(&kill_switch_input);
+        averagedKillSwitchDutyCycle = (100 * averagedKillSwitchDutyCycle + kill_switch_input.dutyCyclePercentage) / 101;
 		propulsion_direction_motor_input.Update(&propulsion_direction_motor_input);
-		currentPropulsionSteeringDutyCycle = (50 * currentPropulsionSteeringDutyCycle + propulsion_direction_motor_input.dutyCyclePercentage) / 51;
+        averagedPropulsionSteeringDutyCycle = (averagedPropulsionSteeringDutyCycle + propulsion_direction_motor_input.dutyCyclePercentage) / 2;
 		propulsion_throttle_servo_input.Update(&propulsion_throttle_servo_input);
-		currentPropulsionThrottleDutyCycle = (currentPropulsionThrottleDutyCycle + propulsion_throttle_servo_input.dutyCyclePercentage) / 2;
+		averagedPropulsionThrottleDutyCycle = (averagedPropulsionThrottleDutyCycle + propulsion_throttle_servo_input.dutyCyclePercentage) / 2;
 		
-        if (currentPropulsionSteeringDutyCycle > STEERING_MAX_INPUT_SIGNAL_DUTY_CYCLE)
+        if (averagedPropulsionSteeringDutyCycle > STEERING_MAX_INPUT_SIGNAL_DUTY_CYCLE)
         {
-            currentPropulsionSteeringDutyCycle = STEERING_MAX_INPUT_SIGNAL_DUTY_CYCLE;
+            averagedPropulsionSteeringDutyCycle = STEERING_MAX_INPUT_SIGNAL_DUTY_CYCLE;
         }
         
         //this is to regulate the duty cycle that is sent to the servo so that it falls within the acceptable range for
         //the servo that is being used by the project.
         //this duty cycle should be approximately between 5% and 15% (with 10% being directly in the center, or 90 degrees of motion in a 180 degree servo)
-        propulsion_throttle_servo_output.dutyCyclePercentage = (currentPropulsionThrottleDutyCycle - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / PROPULSION_THROTTLE_CYCLE_INCREMENT + PROPULSION_THROTTLE_SERVO_OFFSET;
+        propulsion_throttle_servo_output.dutyCyclePercentage = (averagedPropulsionThrottleDutyCycle - MINIMUM_INPUT_SIGNAL_DUTY_CYCLE) / PROPULSION_THROTTLE_CYCLE_INCREMENT + PROPULSION_THROTTLE_SERVO_OFFSET;
         
         //This is here to account for minor variations that put the input duty cycle above or below
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
@@ -175,12 +179,12 @@ int main(void)
         //This is here to account for minor variations that put the input duty cycle above or below
         //the minimum or maximum input signal duty (which could cause undefined behavior on the output signal)
         //this is a binary interpretation of an input signal that could have multiple values, treating it like the switch it represents
-        if (kill_switch_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
+        if (averagedKillSwitchDutyCycle < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
             LATAbits.LATA0 = 0;
             LATAbits.LATA1 = 0;
         }
-        else if (kill_switch_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
+        else if (averagedKillSwitchDutyCycle >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
             LATAbits.LATA0 = 1;
             LATAbits.LATA1 = 1;
@@ -188,24 +192,34 @@ int main(void)
 		
 		
 		propulsion_brake_input.Update(&propulsion_brake_input);
+        averagedBrakeSwitchDutyCycle = (100 * averagedBrakeSwitchDutyCycle + propulsion_brake_input.dutyCyclePercentage) / 101;
 		
         
 		int discreteLocation = 0;
-        if (propulsion_brake_input.dutyCyclePercentage < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
+        if (averagedBrakeSwitchDutyCycle < MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
         {
 			//represents a leftward turn of the propulsion engine
 			//at the moment, the frequency of the PWM signal * the number of counts per trigger = 800 (counts per rotation) * rotations per second
 			//this will allow for smooth movement of the stepper motor
 			//if PWM frequency * counts per trigger > 800 * RPS, then the user input will experience a delay in controlling the stepper motor
 			//if PWM frequency * counts per trigger < 800 * RPS, then the user input will cause jerking in the stepper motor response
-			double preciseLocation = (currentPropulsionSteeringDutyCycle - STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE) / PROPULSION_STEERING_CYCLE_INCREMENT;
+			double preciseLocation = (averagedPropulsionSteeringDutyCycle - STEERING_MIN_INPUT_SIGNAL_DUTY_CYCLE) / PROPULSION_STEERING_CYCLE_INCREMENT;
+            if (preciseLocation < previousPositionOfPropulsionMotor + 2 && preciseLocation > previousPositionOfPropulsionMotor - 2)
+            {
+                preciseLocation = previousPositionOfPropulsionMotor;
+            }
+            else
+            {
+                previousPositionOfPropulsionMotor = preciseLocation;
+            }
+            
 			//changes the values of preciseLocation from 0-100 to a -200 to 200 scale with a dead zone on either end of the controller
-			preciseLocation = (preciseLocation - 50) * 4.6;
+			preciseLocation = (preciseLocation - 50) * 16;
             
 
             discreteLocation = (int)(preciseLocation);
 			
-			if (discreteLocation >= -20 && discreteLocation <= 20)
+			if (discreteLocation >= -32 && discreteLocation <= 32)
 			{
 				discreteLocation = 0;
 			}
@@ -219,7 +233,7 @@ int main(void)
 				discreteLocation = -COUNTS_FOR_90_DEGREE_TURN + 1;
 			}
         }
-        else if (propulsion_brake_input.dutyCyclePercentage >= MIDPOINT_INPUT_SIGNAL_DUTY_CYCLE)
+        else
         {
 			if (stepper_motor_counter_input.numberOfCounts >= 0)
 			{
